@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan DCA · BTC · ETH · COIN · CRCL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e14; --bg-card:#131820; --bg-card-hover:#181e28; --border:#1f2630;
+  --text:#e6edf3; --text-dim:#8b949e;
+  --green:#56d364; --red:#ff6b6b; --yellow:#f0c674; --blue:#58a6ff; --purple:#bc8cff;
+  --orange:#ff7e3f; --emergency:#ff3860;
+  --display:'Space Grotesk',sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+*{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+*::-webkit-scrollbar{width:8px;height:8px}
+*::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+body{background:var(--bg);color:var(--text);font-family:var(--display);min-height:100vh;padding:24px;font-size:15px}
+.container{max-width:1240px;margin:0 auto}
+
+.header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);gap:16px;flex-wrap:wrap}
+.header h1{font-size:30px;font-weight:700;letter-spacing:-1px;background:linear-gradient(135deg,var(--orange),var(--yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header .subtitle{color:var(--text-dim);font-size:13px;margin-top:4px;font-family:var(--mono)}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+button{background:var(--bg-card);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-family:var(--display);font-weight:500;transition:all .15s}
+button:hover{background:var(--bg-card-hover);border-color:var(--blue)}
+button.primary{background:var(--blue);color:var(--bg);border-color:var(--blue)}
+button.primary:hover{background:#4a8de0}
+button.green{background:var(--green);color:var(--bg);border-color:var(--green)}
+button.green:hover{background:#4ac358}
+button.danger{color:var(--red);border-color:var(--red)}
+button.danger:hover{background:var(--red);color:var(--bg)}
+button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
+
+.tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border);overflow-x:auto}
+.tab{background:transparent;border:none;color:var(--text-dim);padding:12px 20px;cursor:pointer;font-family:var(--display);font-size:14px;font-weight:500;position:relative;white-space:nowrap;border-radius:0}
+.tab:hover{color:var(--text);background:transparent}
+.tab.active{color:var(--blue)}
+.tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--blue)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px}
+.card-title{font-size:18px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.card-subtitle{color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;font-family:var(--mono)}
+
+/* LIVE PRICES BAR */
+.prices-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px}
+.price-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden}
+.price-card .pc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.price-card .pc-ticker{font-family:var(--mono);font-weight:700;font-size:15px}
+.price-card .pc-kind{font-family:var(--mono);font-size:10px;color:var(--text-dim);background:var(--bg);padding:2px 8px;border-radius:4px}
+.price-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-family:var(--mono);font-size:20px;font-weight:700}
+.price-input:focus{border-color:var(--blue);outline:none}
+.price-input.live{border-style:dashed}
+.pc-next{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.5}
+
+/* SUMMARY */
+.summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:20px}
+.summary-stat .label{color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:var(--mono)}
+.summary-stat .value{font-size:23px;font-weight:700;font-family:var(--mono)}
+.summary-stat .sub{color:var(--text-dim);font-size:12px;margin-top:4px;font-family:var(--mono)}
+.profit-positive{color:var(--green)} .profit-negative{color:var(--red)}
+
+/* ALERTS */
+.alert-banner{background:linear-gradient(135deg,rgba(86,211,100,.14),rgba(88,166,255,.14));border:1px solid var(--green);border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;animation:glow 2.2s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(86,211,100,.25)}50%{box-shadow:0 0 26px 0 rgba(86,211,100,.18)}}
+.alert-banner.reserva{background:linear-gradient(135deg,rgba(255,56,96,.14),rgba(255,126,63,.14));border-color:var(--emergency)}
+.alert-icon{font-size:28px}
+.alert-body{flex:1}
+.alert-title{font-weight:700;font-size:15px;color:var(--green)}
+.alert-banner.reserva .alert-title{color:var(--emergency)}
+.alert-desc{color:var(--text-dim);font-size:12px;font-family:var(--mono);margin-top:2px}
+.tab-badge{display:inline-block;background:var(--green);color:var(--bg);font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px;font-family:var(--mono);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+/* WEEKLY */
+.weekly-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:4px}
+.weekly-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px}
+.weekly-card .wc-ticker{font-family:var(--mono);font-weight:700;font-size:14px;margin-bottom:4px}
+.weekly-card .wc-amt{font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green);margin-bottom:4px}
+.weekly-card .wc-prog{font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:10px}
+.bar{height:6px;background:var(--bg-card);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.bar-fill{height:100%;border-radius:3px;transition:width .4s}
+
+/* ALLOC CARDS */
+.alloc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.alloc-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:18px}
+.alloc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.alloc-head .ah-name{font-family:var(--mono);font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px}
+.dot{width:9px;height:9px;border-radius:50%}
+.alloc-head .ah-budget{font-family:var(--mono);font-size:12px;color:var(--text-dim)}
+.alloc-row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;padding:4px 0;color:var(--text-dim)}
+.alloc-row b{color:var(--text);font-weight:500}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{text-align:left;color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:10px 12px;border-bottom:1px solid var(--border);font-family:var(--mono);font-weight:500}
+.data-table td{padding:13px 12px;font-family:var(--mono);font-size:13px;border-bottom:1px solid var(--border)}
+.data-table tr:last-child td{border-bottom:none}
+
+/* LADDERS */
+.ladder{margin-bottom:20px}
+.ladder-head{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-weight:700;font-size:15px;margin-bottom:6px}
+.level-row{display:grid;grid-template-columns:130px 1fr 90px 110px 120px;gap:12px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:13px}
+.level-row:last-child{border-bottom:none}
+.level-bar{height:8px;background:var(--bg);border-radius:4px;position:relative;overflow:hidden}
+.level-bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;transition:width .4s}
+.lvl-status{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;text-align:center}
+.st-pending{background:rgba(139,148,158,.15);color:var(--text-dim)}
+.st-near{background:rgba(240,198,116,.15);color:var(--yellow)}
+.st-reached{background:rgba(86,211,100,.18);color:var(--green)}
+.st-done{background:rgba(88,166,255,.15);color:var(--blue)}
+
+/* FORMS */
+.field{margin-bottom:12px}
+.field label{display:block;color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:var(--mono)}
+.field input,.field select{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:6px;font-family:var(--mono);font-size:13px}
+.field input:focus,.field select:focus{border-color:var(--blue);outline:none}
+.manual-form{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:12px;align-items:end;background:var(--bg);border:1px dashed var(--border);border-radius:8px;padding:16px}
+
+.tx-row{display:grid;grid-template-columns:100px 70px 80px 1fr 1fr 1fr auto;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;align-items:center}
+.tx-tag{font-size:10px;padding:2px 7px;border-radius:4px;text-align:center}
+.tag-base{background:rgba(88,166,255,.15);color:var(--blue)}
+.tag-tramo{background:rgba(86,211,100,.15);color:var(--green)}
+.tag-reserva{background:rgba(255,56,96,.15);color:var(--emergency)}
+.tag-manual{background:rgba(139,148,158,.15);color:var(--text-dim)}
+.tx-del{background:transparent;border:none;color:var(--text-dim);cursor:pointer;padding:2px 6px}
+.tx-del:hover{color:var(--red);background:transparent}
+
+.note{background:rgba(240,198,116,.08);border:1px solid rgba(240,198,116,.3);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--text-dim);line-height:1.6;font-family:var(--mono)}
+.note b{color:var(--yellow)}
+.help{font-size:13px;line-height:1.8;color:var(--text-dim)}
+.help h3{color:var(--blue);font-family:var(--mono);font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:16px 0 8px}
+.help b{color:var(--text)}
+
+@media(max-width:900px){
+  .prices-bar,.weekly-grid{grid-template-columns:1fr 1fr}
+  .summary-grid,.alloc-grid{grid-template-columns:1fr 1fr}
+  .manual-form{grid-template-columns:1fr 1fr}
+  .level-row{grid-template-columns:1fr 1fr;gap:6px}
+  .tx-row{grid-template-columns:1fr 1fr;gap:4px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <div>
+    <h1>Plan DCA · BTC · ETH · COIN · CRCL · MSTR</h1>
+    <div class="subtitle">Base semanal + escalera de tramos + reserva — acumulación en bear market</div>
+  </div>
+  <div class="header-actions">
+    <button onclick="refreshPrices()">↻ Actualizar precios</button>
+    <button onclick="exportData()">↓ Backup</button>
+    <button onclick="importData()">↑ Importar</button>
+    <button class="danger" onclick="resetData()">Reset</button>
+  </div>
+</div>
+
+<!-- LIVE PRICES -->
+<div class="prices-bar" id="pricesBar"></div>
+<div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin:-12px 0 20px;text-align:right" id="lastUpdate">—</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('main',event)">📊 Resumen y compras</button>
+  <button class="tab" onclick="switchTab('ladders',event)" id="tabLadders">🪜 Escaleras</button>
+  <button class="tab" onclick="switchTab('history',event)">📝 Historial</button>
+  <button class="tab" onclick="switchTab('help',event)">❓ Ayuda</button>
+</div>
+
+<!-- TAB MAIN -->
+<div id="tab-main" class="tab-content active">
+  <div id="alertsArea"></div>
+
+  <div class="card">
+    <div class="card-subtitle">📊 Estado del plan</div>
+    <div class="summary-grid">
+      <div class="summary-stat"><div class="label">Invertido</div><div class="value" id="sInvested">$0</div><div class="sub" id="sDeployedPct">0% del plan</div></div>
+      <div class="summary-stat"><div class="label">Valor actual</div><div class="value" id="sValue">$0</div></div>
+      <div class="summary-stat"><div class="label">P/L no realizado</div><div class="value" id="sPnl">$0</div><div class="sub" id="sPnlPct">0%</div></div>
+      <div class="summary-stat"><div class="label">Precio prom. global</div><div class="value" id="sAvg" style="font-size:18px">—</div><div class="sub">ponderado en USD</div></div>
+      <div class="summary-stat"><div class="label">Pólvora restante</div><div class="value" id="sDry" style="color:var(--blue)">$0</div><div class="sub" id="sDryWeeks">de $224.000 total</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>🗓️ Compra semanal (base)</span>
+      <button class="green" onclick="registerAllWeekly()">+ Registrar la semana completa</button>
+    </div>
+    <div class="card-subtitle">se compra al precio actual de cada activo · 20 semanas</div>
+    <div class="weekly-grid" id="weeklyGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💼 Posiciones</div>
+    <table class="data-table">
+      <thead><tr><th>Activo</th><th>Holdings</th><th>Prom. compra</th><th>Precio actual</th><th>Invertido</th><th>Valor</th><th>P/L</th></tr></thead>
+      <tbody id="positionsBody"></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🎯 Avance por activo</div>
+    <div class="alloc-grid" id="allocGrid"></div>
+  </div>
+</div>
+
+<!-- TAB LADDERS -->
+<div id="tab-ladders" class="tab-content">
+  <div class="card">
+    <div class="card-title">🪜 Escaleras de tramos y reserva</div>
+    <div class="card-subtitle">cuando el precio toca un nivel, aparece "registrar" · se compra al precio actual</div>
+    <div id="laddersArea"></div>
+  </div>
+</div>
+
+<!-- TAB HISTORY -->
+<div id="tab-history" class="tab-content">
+  <div class="card">
+    <div class="card-title">➕ Registrar compra manual</div>
+    <div class="manual-form">
+      <div class="field"><label>Activo</label><select id="mAsset"><option>BTC</option><option>ETH</option><option>COIN</option><option>CRCL</option><option>MSTR</option></select></div>
+      <div class="field"><label>Monto USD</label><input type="number" id="mUsd" placeholder="0" step="1"></div>
+      <div class="field"><label>Precio</label><input type="number" id="mPrice" placeholder="precio" step="any"></div>
+      <div class="field"><label>Fecha</label><input type="date" id="mDate"></div>
+      <button class="primary" onclick="addManual()">Agregar</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span>📝 Historial de compras</span><span style="font-family:var(--mono);font-size:12px;color:var(--text-dim)" id="txCount">0 compras</span></div>
+    <div id="txHeader" class="tx-row" style="color:var(--text-dim);font-size:11px;text-transform:uppercase;border-bottom:1px solid var(--border)">
+      <div>Fecha</div><div>Activo</div><div>Tipo</div><div>Monto USD</div><div>Precio</div><div>Cantidad</div><div></div>
+    </div>
+    <div id="txList"></div>
+  </div>
+</div>
+
+<!-- TAB HELP -->
+<div id="tab-help" class="tab-content">
+  <div class="card">
+    <div class="card-title">❓ Cómo funciona</div>
+    <div class="help">
+      <p>Este tablero sigue el plan que armamos: una <b>base semanal</b> que comprás pase lo que pase, una <b>escalera de tramos</b> que se dispara cuando el precio baja a ciertos niveles, y una <b>reserva profunda</b> para caídas extremas.</p>
+      <h3>Compra semanal</h3>
+      <p>En "Resumen y compras" tenés las 4 bases ($2.000 BTC · $400 ETH · $200 COIN · $200 CRCL = <b>$2.800/semana</b>). Cada vez que comprás, tocás "Registrar la semana completa" (o el botón de cada activo). Se registra al precio actual. Llevás la cuenta de semana X de 20.</p>
+      <h3>Alertas de tramos</h3>
+      <p>Cuando el precio en vivo toca un nivel de la escalera, aparece un <b>cartel verde arriba</b> y el nivel queda en estado "TOCADO". Tocás "Registrar" y queda comprado. Los niveles a menos de 4% se marcan en amarillo ("cerca").</p>
+      <h3>Precios</h3>
+      <p><b>BTC y ETH</b> se actualizan desde Binance. <b>COIN y CRCL</b> ahora se leen en vivo del precio del token xStock en Solana (DexScreener, con Jupiter de respaldo), sin clave. Si la API no responde, el campo queda editable y podés escribir el precio a mano (lo copiás de Kraken). Ojo: el precio on-chain del token sigue al de la acción real, pero <b>COINx y MSTRx tienen poca liquidez</b>, así que su precio puede moverse a saltos o quedar algo desfasado del precio real (hoy mismo MSTRx cotiza con descuento vs MSTR) — si ves algo raro, cruzá con Kraken o con el precio de la acción.</p>
+      <h3>Tus datos</h3>
+      <p>Todo se guarda en este navegador (localStorage). Usá "Backup" para bajar un JSON y "Importar" para restaurarlo. Abrí siempre el mismo archivo en el mismo navegador para no perder el historial.</p>
+      <div class="note" style="margin-top:16px"><b>Nota:</b> esto es una herramienta de seguimiento, no asesoramiento financiero. Los niveles y montos son los que definimos juntos; podés editarlos en el código (objeto PLAN) si querés ajustarlos.</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============== PLAN ==============
+const PLAN = {
+  BTC:{name:'Bitcoin',ticker:'BTC',color:'#f7931a',kind:'crypto',binance:'BTCUSDT',budget:110000,weekly:1500,weeks:20,
+    tramos:[{id:'t60',price:60000,amount:4500},{id:'t55',price:55000,amount:6000},{id:'t50',price:50000,amount:8000},{id:'t45',price:45000,amount:11000},{id:'t42',price:42000,amount:12500}],
+    reserva:[{id:'r37',price:37000,amount:11000},{id:'r32',price:32000,amount:15000},{id:'r27',price:27000,amount:12000}]},
+  ETH:{name:'Ethereum',ticker:'ETH',color:'#627eea',kind:'crypto',binance:'ETHUSDT',budget:24000,weekly:300,weeks:20,
+    tramos:[{id:'t1800',price:1800,amount:1500},{id:'t1650',price:1650,amount:2000},{id:'t1500',price:1500,amount:2000},{id:'t1350',price:1350,amount:2500},{id:'t1200',price:1200,amount:2500}],
+    reserva:[{id:'r1050',price:1050,amount:4000},{id:'r900',price:900,amount:3500}]},
+  COIN:{name:'Coinbase · xStock',ticker:'COIN',color:'#3b82f6',kind:'stock',mint:'Xs7ZdzSHLU9ftNJsii5fCeJhoRWSC32SQGzGQtePxNu',budget:12000,weekly:150,weeks:20,
+    tramos:[{id:'t170',price:170,amount:1000},{id:'t155',price:155,amount:1500},{id:'t140',price:140,amount:2000},{id:'t125',price:125,amount:2500}],
+    reserva:[{id:'r110',price:110,amount:2000}]},
+  CRCL:{name:'Circle · xStock',ticker:'CRCL',color:'#1ec9a0',kind:'stock',mint:'XsueG8BtpquVJX9LVLLEGuViXUungE6WmK5YZ3p3bd1',budget:12000,weekly:150,weeks:20,
+    tramos:[{id:'t90',price:90,amount:1000},{id:'t80',price:80,amount:1500},{id:'t70',price:70,amount:2000},{id:'t60',price:60,amount:2500}],
+    reserva:[{id:'r45',price:45,amount:2000}]},
+  MSTR:{name:'Strategy · xStock',ticker:'MSTR',color:'#ef4444',kind:'stock',mint:'XsP7xzNPvEHS1m6qfanPUGjNmdnmsLKEoNAnHjdxxyZ',budget:12000,weekly:150,weeks:20,
+    tramos:[{id:'t110',price:110,amount:1000},{id:'t90',price:90,amount:1500},{id:'t70',price:70,amount:2000},{id:'t55',price:55,amount:2500}],
+    reserva:[{id:'r40',price:40,amount:2000}]},
+};
+const TICKERS = Object.keys(PLAN);
+const TOTAL_PLAN = TICKERS.reduce((s,t)=>s+PLAN[t].budget,0); // 224.000
+
+// ============== STATE ==============
+let prices = {BTC:0,ETH:0,COIN:0,CRCL:0,MSTR:0};
+let priceSrc = {BTC:'live',ETH:'live',COIN:'manual',CRCL:'manual',MSTR:'manual'};
+let transactions = [];   // {id,date,ticker,kind:'base'|'tramo'|'reserva'|'manual',levelId,usd,price}
+const KEY='dcaPlanBtcEth';
+
+function loadState(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KEY)||'{}');
+    transactions=s.transactions||[];
+    prices={...prices,...(s.prices||{})}; // recordar últimos precios (sobre todo stocks)
+  }catch(e){console.error(e)}
+}
+function saveState(){localStorage.setItem(KEY,JSON.stringify({transactions,prices}));}
+
+// ============== PRICES ==============
+async function refreshPrices(){
+  document.getElementById('lastUpdate').textContent='actualizando…';
+  let okCrypto=false, okStock=0;
+  // --- Cripto: Binance ---
+  try{
+    const cryptos=TICKERS.filter(t=>PLAN[t].kind==='crypto');
+    const syms=cryptos.map(t=>`"${PLAN[t].binance}"`).join(',');
+    const res=await fetch(`https://api.binance.com/api/v3/ticker/price?symbols=[${syms}]`);
+    const data=await res.json();
+    data.forEach(item=>{const t=cryptos.find(c=>PLAN[c].binance===item.symbol); if(t){prices[t]=parseFloat(item.price);priceSrc[t]='live';}});
+    okCrypto=true;
+  }catch(e){console.error('Binance:',e);}
+  // --- Acciones: precio del token xStock en Solana (DexScreener, Jupiter de respaldo) ---
+  for(const t of TICKERS.filter(t=>PLAN[t].kind==='stock')){
+    const mint=PLAN[t].mint; let px=0;
+    try{ // DexScreener: tomamos el par con más liquidez
+      const r=await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`);
+      const d=await r.json();
+      const pairs=(d.pairs||[]).filter(p=>p.baseToken&&p.baseToken.address===mint&&p.priceUsd);
+      pairs.sort((a,b)=>((b.liquidity&&b.liquidity.usd)||0)-((a.liquidity&&a.liquidity.usd)||0));
+      if(pairs.length) px=parseFloat(pairs[0].priceUsd);
+    }catch(e){console.error('DexScreener '+t,e);}
+    if(!(px>0)){
+      try{ // Fallback: Jupiter
+        const jr=await fetch(`https://lite-api.jup.ag/price/v3?ids=${mint}`);
+        const jd=await jr.json();
+        const e2=jd[mint]||(jd.data&&jd.data[mint]);
+        const jp=e2&&(e2.usdPrice||e2.price);
+        if(jp) px=parseFloat(jp);
+      }catch(e){console.error('Jupiter '+t,e);}
+    }
+    if(px>0){prices[t]=px;priceSrc[t]='dex';okStock++;}
+  }
+  const tag = okCrypto ? (okStock===2?'BTC/ETH (Binance) + COIN/CRCL (Solana) en vivo':'BTC/ETH en vivo · stocks: revisar') : 'sin conexión';
+  document.getElementById('lastUpdate').textContent=tag+' · '+new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  saveState(); render();
+}
+function setPrice(t,val){
+  const v=parseFloat(val); if(isFinite(v)&&v>0){prices[t]=v; priceSrc[t]='manual'; saveState(); render();}
+}
+
+// ============== CALC ==============
+function position(t){
+  const txs=transactions.filter(x=>x.ticker===t);
+  let usd=0,qty=0;
+  txs.forEach(x=>{usd+=x.usd; qty+=x.usd/x.price;});
+  const cur=prices[t]||0;
+  const value=qty*cur;
+  return {usd,qty,avg:qty>0?usd/qty:0,value,pnl:value-usd,pnlPct:usd>0?(value-usd)/usd*100:0};
+}
+function weeksDone(t){return transactions.filter(x=>x.ticker===t&&x.kind==='base').length;}
+function levelDone(t,id){return transactions.some(x=>x.ticker===t&&x.levelId===id);}
+function deployed(t){return transactions.filter(x=>x.ticker===t).reduce((s,x)=>s+x.usd,0);}
+
+// status of a price level vs current price
+function levelStatus(t,lvl){
+  if(levelDone(t,lvl.id)) return 'done';
+  const p=prices[t]; if(!p) return 'pending';
+  if(p<=lvl.price) return 'reached';
+  if(p<=lvl.price*1.04) return 'near';
+  return 'pending';
+}
+function activeAlerts(){
+  const out=[];
+  TICKERS.forEach(t=>{
+    [...PLAN[t].tramos.map(l=>({...l,bucket:'tramo'})),...PLAN[t].reserva.map(l=>({...l,bucket:'reserva'}))].forEach(lvl=>{
+      if(levelStatus(t,lvl)==='reached') out.push({t,lvl});
+    });
+  });
+  return out;
+}
+
+// ============== ACTIONS ==============
+function logBuy(ticker,kind,usd,price,levelId){
+  if(!price||price<=0){alert(`Necesito el precio de ${ticker}. Cargalo en la barra de arriba.`);return false;}
+  transactions.push({id:Date.now()+''+Math.random().toString(36).slice(2,6),date:new Date().toISOString().slice(0,10),ticker,kind,usd,price,levelId:levelId||null});
+  saveState(); render(); return true;
+}
+function registerWeekly(t){
+  const w=weeksDone(t);
+  if(w>=PLAN[t].weeks){ if(!confirm(`Ya registraste las ${PLAN[t].weeks} semanas de ${t}. ¿Registrar una más igual?`)) return; }
+  logBuy(t,'base',PLAN[t].weekly,prices[t]);
+}
+function registerAllWeekly(){
+  const missing=TICKERS.filter(t=>!prices[t]);
+  if(missing.length){alert(`Faltan precios de: ${missing.join(', ')}. Cargalos arriba primero.`);return;}
+  if(!confirm(`Registrar la base semanal de los 4 activos al precio actual?\n\nBTC $${PLAN.BTC.weekly} · ETH $${PLAN.ETH.weekly} · COIN $${PLAN.COIN.weekly} · CRCL $${PLAN.CRCL.weekly}\nTotal: $${TICKERS.reduce((s,t)=>s+PLAN[t].weekly,0)}`)) return;
+  TICKERS.forEach(t=>logBuy(t,'base',PLAN[t].weekly,prices[t]));
+}
+function registerLevel(t,bucket,id){
+  const lvl=PLAN[t][bucket].find(l=>l.id===id); if(!lvl) return;
+  if(!confirm(`Registrar compra de ${t}: $${lvl.amount.toLocaleString()} al precio actual $${fmt(prices[t])}? (nivel objetivo $${fmt(lvl.price)})`)) return;
+  logBuy(t,bucket,lvl.amount,prices[t],id);
+}
+function addManual(){
+  const t=document.getElementById('mAsset').value;
+  const usd=parseFloat(document.getElementById('mUsd').value);
+  const price=parseFloat(document.getElementById('mPrice').value);
+  const date=document.getElementById('mDate').value||new Date().toISOString().slice(0,10);
+  if(!usd||usd<=0||!price||price<=0){alert('Completá monto y precio válidos');return;}
+  transactions.push({id:Date.now()+''+Math.random().toString(36).slice(2,6),date,ticker:t,kind:'manual',usd,price,levelId:null});
+  saveState(); render();
+  document.getElementById('mUsd').value=''; document.getElementById('mPrice').value='';
+}
+function delTx(id){ if(!confirm('¿Borrar esta compra del historial?'))return; transactions=transactions.filter(x=>x.id!==id); saveState(); render(); }
+
+// ============== HELPERS ==============
+function fmt(n){ if(n>=1000) return n.toLocaleString('en-US',{maximumFractionDigits:0}); if(n>=1) return n.toLocaleString('en-US',{maximumFractionDigits:2}); return n.toFixed(4); }
+function money(n){return '$'+n.toLocaleString('en-US',{maximumFractionDigits:0});}
+function qtyFmt(t,q){const d=t==='BTC'?6:(t==='ETH'?4:3);return q.toFixed(d);}
+function pnlClass(n){return n>=0?'profit-positive':'profit-negative';}
+
+// ============== RENDER ==============
+function render(){
+  renderPrices(); renderAlerts(); renderSummary(); renderWeekly(); renderPositions(); renderAlloc(); renderLadders(); renderHistory();
+}
+
+function renderPrices(){
+  document.getElementById('pricesBar').innerHTML=TICKERS.map(t=>{
+    const P=PLAN[t], p=prices[t]||0;
+    // próximo tramo pendiente (precio <= y no comprado): el de mayor precio aún por encima o el más cercano por debajo
+    const pend=[...P.tramos,...P.reserva].filter(l=>!levelDone(t,l.id));
+    let nextTxt='—';
+    if(p>0&&pend.length){
+      const below=pend.filter(l=>l.price<p).sort((a,b)=>b.price-a.price)[0];
+      const target=below||pend.sort((a,b)=>b.price-a.price)[0];
+      const dist=((target.price-p)/p*100);
+      nextTxt=`próx. tramo $${fmt(target.price)} (${dist>=0?'+':''}${dist.toFixed(1)}%)`;
+    }
+    const live=P.kind==='crypto';
+    const srcLabel={live:'Binance',dex:'Solana DEX',manual:'manual'}[priceSrc[t]||'manual'];
+    const isLiveSrc=(priceSrc[t]==='live'||priceSrc[t]==='dex');
+    return `<div class="price-card">
+      <div class="pc-top"><span class="pc-ticker" style="color:${P.color}">${t}</span><span class="pc-kind">${srcLabel}</span></div>
+      <input class="price-input ${isLiveSrc?'live':''}" type="number" step="any" value="${p||''}" placeholder="precio…" onchange="setPrice('${t}',this.value)">
+      <div class="pc-next">${nextTxt}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderAlerts(){
+  const alerts=activeAlerts();
+  const tabL=document.getElementById('tabLadders');
+  tabL.innerHTML='🪜 Escaleras'+(alerts.length?`<span class="tab-badge">${alerts.length}</span>`:'');
+  if(!alerts.length){document.getElementById('alertsArea').innerHTML='';return;}
+  document.getElementById('alertsArea').innerHTML=alerts.map(({t,lvl})=>{
+    const res=lvl.bucket==='reserva';
+    return `<div class="alert-banner ${res?'reserva':''}">
+      <div class="alert-icon">${res?'🚨':'🟢'}</div>
+      <div class="alert-body">
+        <div class="alert-title">${t} tocó el nivel $${fmt(lvl.price)} ${res?'(RESERVA profunda)':''}</div>
+        <div class="alert-desc">precio actual $${fmt(prices[t])} · te toca comprar $${lvl.amount.toLocaleString()} de ${t}</div>
+      </div>
+      <button class="${res?'danger':'green'}" onclick="registerLevel('${t}','${lvl.bucket}','${lvl.id}')">Registrar $${lvl.amount.toLocaleString()}</button>
+    </div>`;
+  }).join('');
+}
+
+function renderSummary(){
+  let inv=0,val=0;
+  TICKERS.forEach(t=>{const p=position(t); inv+=p.usd; val+=p.value;});
+  const pnl=val-inv;
+  document.getElementById('sInvested').textContent=money(inv);
+  document.getElementById('sDeployedPct').textContent=(inv/TOTAL_PLAN*100).toFixed(1)+'% del plan';
+  document.getElementById('sValue').textContent=money(val);
+  const pe=document.getElementById('sPnl'); pe.textContent=(pnl>=0?'+':'')+money(pnl); pe.className='value '+pnlClass(pnl);
+  document.getElementById('sPnlPct').textContent=(inv>0?(pnl>=0?'+':'')+(pnl/inv*100).toFixed(1)+'%':'—');
+  document.getElementById('sDry').textContent=money(TOTAL_PLAN-inv);
+  document.getElementById('sDryWeeks').textContent='de '+money(TOTAL_PLAN)+' total';
+  // precio promedio global no aplica (multi-activo) → mostramos % desplegado de cada uno no; dejamos el P/L %
+  document.getElementById('sAvg').textContent=inv>0?(val/inv).toFixed(3)+'×':'—';
+  document.getElementById('sAvg').parentElement.querySelector('.label').textContent='Valor / Invertido';
+}
+
+function renderWeekly(){
+  document.getElementById('weeklyGrid').innerHTML=TICKERS.map(t=>{
+    const P=PLAN[t], w=weeksDone(t), pct=Math.min(100,w/P.weeks*100);
+    return `<div class="weekly-card">
+      <div class="wc-ticker" style="color:${P.color}">${t}</div>
+      <div class="wc-amt">$${P.weekly.toLocaleString()}</div>
+      <div class="wc-prog">semana ${w} / ${P.weeks}</div>
+      <div class="bar"><div class="bar-fill" style="width:${pct}%;background:${P.color}"></div></div>
+      <button class="mini primary" style="width:100%" onclick="registerWeekly('${t}')">+ Registrar ${t}</button>
+    </div>`;
+  }).join('');
+}
+
+function renderPositions(){
+  document.getElementById('positionsBody').innerHTML=TICKERS.map(t=>{
+    const P=PLAN[t], p=position(t);
+    return `<tr>
+      <td style="color:${P.color};font-weight:700">${t}</td>
+      <td>${p.qty>0?qtyFmt(t,p.qty):'—'}</td>
+      <td>${p.avg>0?'$'+fmt(p.avg):'—'}</td>
+      <td>${prices[t]?'$'+fmt(prices[t]):'<span style="color:var(--text-dim)">cargar</span>'}</td>
+      <td>${money(p.usd)}</td>
+      <td>${money(p.value)}</td>
+      <td class="${pnlClass(p.pnl)}">${p.usd>0?(p.pnl>=0?'+':'')+money(p.pnl)+' ('+(p.pnl>=0?'+':'')+p.pnlPct.toFixed(1)+'%)':'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAlloc(){
+  document.getElementById('allocGrid').innerHTML=TICKERS.map(t=>{
+    const P=PLAN[t], dep=deployed(t), pos=position(t), pct=Math.min(100,dep/P.budget*100);
+    const baseDep=transactions.filter(x=>x.ticker===t&&x.kind==='base').reduce((s,x)=>s+x.usd,0);
+    const tramoDep=transactions.filter(x=>x.ticker===t&&x.kind==='tramo').reduce((s,x)=>s+x.usd,0);
+    const resDep=transactions.filter(x=>x.ticker===t&&(x.kind==='reserva')).reduce((s,x)=>s+x.usd,0);
+    const manDep=transactions.filter(x=>x.ticker===t&&x.kind==='manual').reduce((s,x)=>s+x.usd,0);
+    return `<div class="alloc-card">
+      <div class="alloc-head">
+        <span class="ah-name"><span class="dot" style="background:${P.color}"></span>${t}</span>
+        <span class="ah-budget">${money(dep)} / ${money(P.budget)}</span>
+      </div>
+      <div class="bar"><div class="bar-fill" style="width:${pct}%;background:${P.color}"></div></div>
+      <div class="alloc-row"><span>Base / Tramos / Reserva</span><b>${money(baseDep)} · ${money(tramoDep)} · ${money(resDep)}</b></div>
+      ${manDep>0?`<div class="alloc-row"><span>Manual</span><b>${money(manDep)}</b></div>`:''}
+      <div class="alloc-row"><span>Holdings</span><b>${pos.qty>0?qtyFmt(t,pos.qty)+' '+t:'—'}</b></div>
+      <div class="alloc-row"><span>Restante del budget</span><b>${money(P.budget-dep)}</b></div>
+    </div>`;
+  }).join('');
+}
+
+function renderLadders(){
+  document.getElementById('laddersArea').innerHTML=TICKERS.map(t=>{
+    const P=PLAN[t];
+    const rows=[...P.tramos.map(l=>({...l,bucket:'tramo'})),...P.reserva.map(l=>({...l,bucket:'reserva'}))].map(lvl=>{
+      const st=levelStatus(t,lvl);
+      const stTxt={pending:'pendiente',near:'cerca',reached:'tocado',done:'comprado'}[st];
+      const p=prices[t]||0;
+      // barra: cuán cerca está el precio de tocar el nivel (100% = tocado)
+      let fillPct=0;
+      if(p>0) fillPct=Math.max(0,Math.min(100,(1-(p-lvl.price)/(lvl.price*0.5))*100));
+      if(st==='reached'||st==='done') fillPct=100;
+      const col=st==='done'?'var(--blue)':(st==='reached'?'var(--green)':(st==='near'?'var(--yellow)':'var(--text-dim)'));
+      const btn= st==='reached' ? `<button class="mini ${lvl.bucket==='reserva'?'danger':'green'}" onclick="registerLevel('${t}','${lvl.bucket}','${lvl.id}')">Registrar</button>`
+               : st==='done' ? `<span style="color:var(--text-dim);font-size:11px">✓ hecho</span>` : '';
+      return `<div class="level-row" style="${lvl.bucket==='reserva'?'opacity:.92':''}">
+        <div style="${lvl.bucket==='reserva'?'color:var(--emergency)':''}">$${fmt(lvl.price)} ${lvl.bucket==='reserva'?'<span style="font-size:9px">RES</span>':''}</div>
+        <div class="level-bar"><div class="level-bar-fill" style="width:${fillPct}%;background:${col}"></div></div>
+        <div>$${lvl.amount.toLocaleString()}</div>
+        <div class="lvl-status st-${st}">${stTxt}</div>
+        <div style="text-align:right">${btn}</div>
+      </div>`;
+    }).join('');
+    const w=weeksDone(t);
+    return `<div class="ladder">
+      <div class="ladder-head"><span class="dot" style="background:${P.color}"></span>${P.name} · base $${P.weekly}/sem (sem ${w}/${P.weeks})</div>
+      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">${rows}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderHistory(){
+  const sorted=[...transactions].sort((a,b)=> b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
+  document.getElementById('txCount').textContent=transactions.length+' compras';
+  if(!sorted.length){document.getElementById('txList').innerHTML='<div style="padding:24px;text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:13px">Sin compras todavía. Empezá registrando la primera semana.</div>';return;}
+  document.getElementById('txList').innerHTML=sorted.map(x=>{
+    const P=PLAN[x.ticker]; const qty=x.usd/x.price;
+    const tagClass={base:'tag-base',tramo:'tag-tramo',reserva:'tag-reserva',manual:'tag-manual'}[x.kind];
+    const tagTxt={base:'semanal',tramo:'tramo',reserva:'reserva',manual:'manual'}[x.kind];
+    return `<div class="tx-row">
+      <div>${x.date}</div>
+      <div style="color:${P.color};font-weight:700">${x.ticker}</div>
+      <div><span class="tx-tag ${tagClass}">${tagTxt}</span></div>
+      <div>${money(x.usd)}</div>
+      <div>$${fmt(x.price)}</div>
+      <div>${qtyFmt(x.ticker,qty)}</div>
+      <div style="text-align:right"><button class="tx-del" onclick="delTx('${x.id}')">✕</button></div>
+    </div>`;
+  }).join('');
+}
+
+// ============== TABS ==============
+function switchTab(id,ev){
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(ev&&ev.target) ev.target.classList.add('active');
+}
+
+// ============== EXPORT / IMPORT / RESET ==============
+function exportData(){
+  const blob=new Blob([JSON.stringify({transactions,prices,exported:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='dca-plan-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+}
+function importData(){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
+  inp.onchange=e=>{const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+    r.onload=ev=>{try{const d=JSON.parse(ev.target.result); if(d.transactions)transactions=d.transactions; if(d.prices)prices={...prices,...d.prices}; saveState(); render(); alert('✓ Importadas '+transactions.length+' compras');}catch(err){alert('Error: '+err.message)}};
+    r.readAsText(f);};
+  inp.click();
+}
+function resetData(){
+  if(!confirm('⚠️ Esto borra TODAS las compras registradas. ¿Seguro?'))return;
+  if(!confirm('Última oportunidad. ¿Borrar todo el historial?'))return;
+  transactions=[]; localStorage.removeItem(KEY); saveState(); render();
+}
+
+// ============== INIT ==============
+document.getElementById('mDate').valueAsDate=new Date();
+loadState();
+render();
+refreshPrices();
+setInterval(refreshPrices,60000);
+</script>
+</body>
+</html>
