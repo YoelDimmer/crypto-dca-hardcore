@@ -392,7 +392,8 @@ function registerAllWeekly(){
   TICKERS.forEach(t=>logBuy(t,'base',PLAN[t].weekly,prices[t]));
 }
 function registerLevel(t,bucket,id){
-  const lvl=PLAN[t][bucket].find(l=>l.id===id); if(!lvl) return;
+  const key = bucket==='tramo' ? 'tramos' : 'reserva';
+  const lvl=PLAN[t][key].find(l=>l.id===id); if(!lvl) return;
   if(!confirm(`Registrar compra de ${t}: $${lvl.amount.toLocaleString()} al precio actual $${fmt(prices[t])}? (nivel objetivo $${fmt(lvl.price)})`)) return;
   logBuy(t,bucket,lvl.amount,prices[t],id);
 }
