@@ -157,6 +157,9 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
     <div class="subtitle">Base semanal + escalera de tramos + reserva — acumulación en bear market</div>
   </div>
   <div class="header-actions">
+    <span style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-family:var(--mono);font-size:12px;color:var(--text-dim)">
+      slippage <input id="slipInput" type="number" step="0.1" min="0" style="width:54px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:3px 6px;font-family:var(--mono);font-size:12px" onchange="setSlippage(this.value)"> %
+    </span>
     <button onclick="refreshPrices()">↻ Actualizar precios</button>
     <button onclick="exportData()">↓ Backup</button>
     <button onclick="importData()">↑ Importar</button>
@@ -255,6 +258,8 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
       <p>Cuando el precio en vivo toca un nivel de la escalera, aparece un <b>cartel verde arriba</b> y el nivel queda en estado "TOCADO". Tocás "Registrar" y queda comprado. Los niveles a menos de 4% se marcan en amarillo ("cerca").</p>
       <h3>Precios</h3>
       <p><b>BTC y ETH</b> se actualizan desde Binance. <b>COIN y CRCL</b> ahora se leen en vivo del precio del token xStock en Solana (DexScreener, con Jupiter de respaldo), sin clave. Si la API no responde, el campo queda editable y podés escribir el precio a mano (lo copiás de Kraken). Ojo: el precio on-chain del token sigue al de la acción real, pero <b>COINx y MSTRx tienen poca liquidez</b>, así que su precio puede moverse a saltos o quedar algo desfasado del precio real (hoy mismo MSTRx cotiza con descuento vs MSTR) — si ves algo raro, cruzá con Kraken o con el precio de la acción.</p>
+      <h3>Slippage y corrección de compras</h3>
+      <p>El botón registra al precio mostrado, pero en la realidad tu fill es un poco peor (slippage + comisiones), así que recibís algo menos. Dos formas de ajustarlo: poné un <b>slippage %</b> arriba (ej. 0,3) y cada compra rápida se guarda a un precio un toque más alto, bajando la cantidad para que coincida sola. Y en el <b>Historial</b>, el botón ✎ te deja editar cualquier compra: monto, precio, o directamente la <b>cantidad real recibida</b> (dejá el campo cantidad vacío para que se calcule sola, o escribila para fijar exactamente lo que tenés). Las compras con cantidad ajustada a mano quedan marcadas con un puntito amarillo.</p>
       <h3>Tus datos</h3>
       <p>Todo se guarda en este navegador (localStorage). Usá "Backup" para bajar un JSON y "Importar" para restaurarlo. Abrí siempre el mismo archivo en el mismo navegador para no perder el historial.</p>
       <div class="note" style="margin-top:16px"><b>Nota:</b> esto es una herramienta de seguimiento, no asesoramiento financiero. Los niveles y montos son los que definimos juntos; podés editarlos en el código (objeto PLAN) si querés ajustarlos.</div>
@@ -289,7 +294,9 @@ const TOTAL_PLAN = TICKERS.reduce((s,t)=>s+PLAN[t].budget,0); // 224.000
 // ============== STATE ==============
 let prices = {BTC:0,ETH:0,COIN:0,CRCL:0,MSTR:0};
 let priceSrc = {BTC:'live',ETH:'live',COIN:'manual',CRCL:'manual',MSTR:'manual'};
-let transactions = [];   // {id,date,ticker,kind:'base'|'tramo'|'reserva'|'manual',levelId,usd,price}
+let transactions = [];   // {id,date,ticker,kind,levelId,usd,price,qty?}
+let slippage = 0;        // % aplicado a compras rápidas (slippage + fees)
+let editingTx = null;    // id de la compra en edición
 const KEY='dcaPlanBtcEth';
 
 function loadState(){
@@ -297,9 +304,12 @@ function loadState(){
     const s=JSON.parse(localStorage.getItem(KEY)||'{}');
     transactions=s.transactions||[];
     prices={...prices,...(s.prices||{})}; // recordar últimos precios (sobre todo stocks)
+    slippage=s.slippage||0;
   }catch(e){console.error(e)}
 }
-function saveState(){localStorage.setItem(KEY,JSON.stringify({transactions,prices}));}
+function saveState(){localStorage.setItem(KEY,JSON.stringify({transactions,prices,slippage}));}
+function setSlippage(v){const s=parseFloat(v); slippage=(isFinite(s)&&s>=0)?s:0; saveState(); render();}
+function fillPrice(t){return prices[t]*(1+slippage/100);}
 
 // ============== PRICES ==============
 async function refreshPrices(){
@@ -347,7 +357,7 @@ function setPrice(t,val){
 function position(t){
   const txs=transactions.filter(x=>x.ticker===t);
   let usd=0,qty=0;
-  txs.forEach(x=>{usd+=x.usd; qty+=x.usd/x.price;});
+  txs.forEach(x=>{usd+=x.usd; qty+=(x.qty!=null?x.qty:x.usd/x.price);});
   const cur=prices[t]||0;
   const value=qty*cur;
   return {usd,qty,avg:qty>0?usd/qty:0,value,pnl:value-usd,pnlPct:usd>0?(value-usd)/usd*100:0};
@@ -383,19 +393,19 @@ function logBuy(ticker,kind,usd,price,levelId){
 function registerWeekly(t){
   const w=weeksDone(t);
   if(w>=PLAN[t].weeks){ if(!confirm(`Ya registraste las ${PLAN[t].weeks} semanas de ${t}. ¿Registrar una más igual?`)) return; }
-  logBuy(t,'base',PLAN[t].weekly,prices[t]);
+  logBuy(t,'base',PLAN[t].weekly,fillPrice(t));
 }
 function registerAllWeekly(){
   const missing=TICKERS.filter(t=>!prices[t]);
   if(missing.length){alert(`Faltan precios de: ${missing.join(', ')}. Cargalos arriba primero.`);return;}
-  if(!confirm(`Registrar la base semanal de los 4 activos al precio actual?\n\nBTC $${PLAN.BTC.weekly} · ETH $${PLAN.ETH.weekly} · COIN $${PLAN.COIN.weekly} · CRCL $${PLAN.CRCL.weekly}\nTotal: $${TICKERS.reduce((s,t)=>s+PLAN[t].weekly,0)}`)) return;
-  TICKERS.forEach(t=>logBuy(t,'base',PLAN[t].weekly,prices[t]));
+  if(!confirm(`Registrar la base semanal de los 5 activos al precio actual${slippage>0?` (+${slippage}% slippage)`:''}?\n\nBTC $${PLAN.BTC.weekly} · ETH $${PLAN.ETH.weekly} · COIN $${PLAN.COIN.weekly} · CRCL $${PLAN.CRCL.weekly} · MSTR $${PLAN.MSTR.weekly}\nTotal: $${TICKERS.reduce((s,t)=>s+PLAN[t].weekly,0)}`)) return;
+  TICKERS.forEach(t=>logBuy(t,'base',PLAN[t].weekly,fillPrice(t)));
 }
 function registerLevel(t,bucket,id){
   const key = bucket==='tramo' ? 'tramos' : 'reserva';
   const lvl=PLAN[t][key].find(l=>l.id===id); if(!lvl) return;
-  if(!confirm(`Registrar compra de ${t}: $${lvl.amount.toLocaleString()} al precio actual $${fmt(prices[t])}? (nivel objetivo $${fmt(lvl.price)})`)) return;
-  logBuy(t,bucket,lvl.amount,prices[t],id);
+  if(!confirm(`Registrar compra de ${t}: $${lvl.amount.toLocaleString()} al precio de fill $${fmt(fillPrice(t))}${slippage>0?` (incluye ${slippage}% slippage)`:''}? (nivel objetivo $${fmt(lvl.price)})`)) return;
+  logBuy(t,bucket,lvl.amount,fillPrice(t),id);
 }
 function addManual(){
   const t=document.getElementById('mAsset').value;
@@ -408,6 +418,19 @@ function addManual(){
   document.getElementById('mUsd').value=''; document.getElementById('mPrice').value='';
 }
 function delTx(id){ if(!confirm('¿Borrar esta compra del historial?'))return; transactions=transactions.filter(x=>x.id!==id); saveState(); render(); }
+function editTx(id){ editingTx=id; render(); }
+function cancelEdit(){ editingTx=null; render(); }
+function saveTx(id){
+  const tx=transactions.find(x=>x.id===id); if(!tx) return;
+  const usd=parseFloat(document.getElementById('e_usd_'+id).value);
+  const price=parseFloat(document.getElementById('e_price_'+id).value);
+  const qtyRaw=document.getElementById('e_qty_'+id).value.trim();
+  if(!(usd>0)||!(price>0)){alert('Monto y precio deben ser válidos');return;}
+  tx.usd=usd; tx.price=price;
+  if(qtyRaw===''){ delete tx.qty; }            // sin cantidad → se deriva de usd/precio
+  else { const q=parseFloat(qtyRaw); if(q>0) tx.qty=q; else delete tx.qty; }
+  editingTx=null; saveState(); render();
+}
 
 // ============== HELPERS ==============
 function fmt(n){ if(n>=1000) return n.toLocaleString('en-US',{maximumFractionDigits:0}); if(n>=1) return n.toLocaleString('en-US',{maximumFractionDigits:2}); return n.toFixed(4); }
@@ -417,6 +440,7 @@ function pnlClass(n){return n>=0?'profit-positive':'profit-negative';}
 
 // ============== RENDER ==============
 function render(){
+  const si=document.getElementById('slipInput'); if(si&&document.activeElement!==si) si.value=slippage;
   renderPrices(); renderAlerts(); renderSummary(); renderWeekly(); renderPositions(); renderAlloc(); renderLadders(); renderHistory();
 }
 
@@ -560,18 +584,32 @@ function renderHistory(){
   const sorted=[...transactions].sort((a,b)=> b.date.localeCompare(a.date) || b.id.localeCompare(a.id));
   document.getElementById('txCount').textContent=transactions.length+' compras';
   if(!sorted.length){document.getElementById('txList').innerHTML='<div style="padding:24px;text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:13px">Sin compras todavía. Empezá registrando la primera semana.</div>';return;}
+  const inS='width:100%;background:var(--bg);border:1px solid var(--blue);color:var(--text);border-radius:5px;padding:4px 6px;font-family:var(--mono);font-size:12px';
   document.getElementById('txList').innerHTML=sorted.map(x=>{
-    const P=PLAN[x.ticker]; const qty=x.usd/x.price;
+    const P=PLAN[x.ticker];
+    const derived=x.usd/x.price;
+    const qty=(x.qty!=null?x.qty:derived);
     const tagClass={base:'tag-base',tramo:'tag-tramo',reserva:'tag-reserva',manual:'tag-manual'}[x.kind];
     const tagTxt={base:'semanal',tramo:'tramo',reserva:'reserva',manual:'manual'}[x.kind];
+    if(editingTx===x.id){
+      return `<div class="tx-row" style="background:rgba(88,166,255,.06)">
+        <div>${x.date}</div>
+        <div style="color:${P.color};font-weight:700">${x.ticker}</div>
+        <div><span class="tx-tag ${tagClass}">${tagTxt}</span></div>
+        <div><input id="e_usd_${x.id}" type="number" step="any" value="${x.usd}" style="${inS}"></div>
+        <div><input id="e_price_${x.id}" type="number" step="any" value="${x.price}" style="${inS}"></div>
+        <div><input id="e_qty_${x.id}" type="number" step="any" value="${x.qty!=null?x.qty:''}" placeholder="${qtyFmt(x.ticker,derived)}" style="${inS}"></div>
+        <div style="text-align:right;white-space:nowrap"><button class="tx-del" style="color:var(--green)" onclick="saveTx('${x.id}')">✓</button><button class="tx-del" onclick="cancelEdit()">✕</button></div>
+      </div>`;
+    }
     return `<div class="tx-row">
       <div>${x.date}</div>
       <div style="color:${P.color};font-weight:700">${x.ticker}</div>
       <div><span class="tx-tag ${tagClass}">${tagTxt}</span></div>
       <div>${money(x.usd)}</div>
       <div>$${fmt(x.price)}</div>
-      <div>${qtyFmt(x.ticker,qty)}</div>
-      <div style="text-align:right"><button class="tx-del" onclick="delTx('${x.id}')">✕</button></div>
+      <div>${qtyFmt(x.ticker,qty)}${x.qty!=null?' <span title="cantidad ajustada a mano" style="color:var(--yellow)">•</span>':''}</div>
+      <div style="text-align:right;white-space:nowrap"><button class="tx-del" style="color:var(--blue)" onclick="editTx('${x.id}')" title="editar">✎</button><button class="tx-del" onclick="delTx('${x.id}')" title="borrar">✕</button></div>
     </div>`;
   }).join('');
 }
@@ -593,7 +631,7 @@ function exportData(){
 function importData(){
   const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
   inp.onchange=e=>{const f=e.target.files[0]; if(!f)return; const r=new FileReader();
-    r.onload=ev=>{try{const d=JSON.parse(ev.target.result); if(d.transactions)transactions=d.transactions; if(d.prices)prices={...prices,...d.prices}; saveState(); render(); alert('✓ Importadas '+transactions.length+' compras');}catch(err){alert('Error: '+err.message)}};
+    r.onload=ev=>{try{const d=JSON.parse(ev.target.result); if(d.transactions)transactions=d.transactions; if(d.prices)prices={...prices,...d.prices}; if(d.slippage!=null)slippage=d.slippage; saveState(); render(); alert('✓ Importadas '+transactions.length+' compras');}catch(err){alert('Error: '+err.message)}};
     r.readAsText(f);};
   inp.click();
 }
