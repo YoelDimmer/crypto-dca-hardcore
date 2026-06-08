@@ -50,7 +50,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
 .card-subtitle{color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;font-family:var(--mono)}
 
 /* LIVE PRICES BAR */
-.prices-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px}
+.prices-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
 .price-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden}
 .price-card .pc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .price-card .pc-ticker{font-family:var(--mono);font-weight:700;font-size:15px}
@@ -80,7 +80,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
 
 /* WEEKLY */
-.weekly-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:4px}
+.weekly-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:16px;margin-top:4px}
 .weekly-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px}
 .weekly-card .wc-ticker{font-family:var(--mono);font-weight:700;font-size:14px;margin-bottom:4px}
 .weekly-card .wc-amt{font-size:22px;font-weight:700;font-family:var(--mono);color:var(--green);margin-bottom:4px}
@@ -153,7 +153,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
 
 <div class="header">
   <div>
-    <h1>Plan DCA · BTC · ETH · COIN · CRCL · MSTR</h1>
+    <h1>Plan DCA · BTC · ETH · COIN · CRCL · MSTR · SPY</h1>
     <div class="subtitle">Base semanal + escalera de tramos + reserva — acumulación en bear market</div>
   </div>
   <div class="header-actions">
@@ -230,7 +230,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
   <div class="card">
     <div class="card-title">➕ Registrar compra manual</div>
     <div class="manual-form">
-      <div class="field"><label>Activo</label><select id="mAsset"><option>BTC</option><option>ETH</option><option>COIN</option><option>CRCL</option><option>MSTR</option></select></div>
+      <div class="field"><label>Activo</label><select id="mAsset"><option>BTC</option><option>ETH</option><option>COIN</option><option>CRCL</option><option>MSTR</option><option>SPY</option></select></div>
       <div class="field"><label>Monto USD</label><input type="number" id="mUsd" placeholder="0" step="1"></div>
       <div class="field"><label>Precio</label><input type="number" id="mPrice" placeholder="precio" step="any"></div>
       <div class="field"><label>Fecha</label><input type="date" id="mDate"></div>
@@ -260,6 +260,8 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
       <p><b>BTC y ETH</b> se actualizan desde Binance. <b>COIN y CRCL</b> ahora se leen en vivo del precio del token xStock en Solana (DexScreener, con Jupiter de respaldo), sin clave. Si la API no responde, el campo queda editable y podés escribir el precio a mano (lo copiás de Kraken). Ojo: el precio on-chain del token sigue al de la acción real, pero <b>COINx y MSTRx tienen poca liquidez</b>, así que su precio puede moverse a saltos o quedar algo desfasado del precio real (hoy mismo MSTRx cotiza con descuento vs MSTR) — si ves algo raro, cruzá con Kraken o con el precio de la acción.</p>
       <h3>Slippage y corrección de compras</h3>
       <p>El botón registra al precio mostrado, pero en la realidad tu fill es un poco peor (slippage + comisiones), así que recibís algo menos. Dos formas de ajustarlo: poné un <b>slippage %</b> arriba (ej. 0,3) y cada compra rápida se guarda a un precio un toque más alto, bajando la cantidad para que coincida sola. Y en el <b>Historial</b>, el botón ✎ te deja editar cualquier compra: monto, precio, o directamente la <b>cantidad real recibida</b> (dejá el campo cantidad vacío para que se calcule sola, o escribila para fijar exactamente lo que tenés). Las compras con cantidad ajustada a mano quedan marcadas con un puntito amarillo.</p>
+      <h3>S&P 500 (SPY) · base dinámica</h3>
+      <p>El S&P es distinto: la base semanal <b>se ajusta sola según cuánto está el precio debajo de su máximo (ATH)</b> — $100 cerca de máximos, y va subiendo ($150, $200… hasta $350) cuanto más cae. No tiene límite de semanas (es un hold de largo plazo). Su ATH de referencia se actualiza solo si el índice hace nuevos máximos. Los niveles de dip (−30%, −40%, −50%) y sus refuerzos ($2.500 / $5.000 / $10.000) se calculan como % por debajo de ese ATH. El SPY queda fuera del "plan fijo" de $170k (es abierto), por eso en el resumen aparece aparte.</p>
       <h3>Tus datos</h3>
       <p>Todo se guarda en este navegador (localStorage). Usá "Backup" para bajar un JSON y "Importar" para restaurarlo. Abrí siempre el mismo archivo en el mismo navegador para no perder el historial.</p>
       <div class="note" style="margin-top:16px"><b>Nota:</b> esto es una herramienta de seguimiento, no asesoramiento financiero. Los niveles y montos son los que definimos juntos; podés editarlos en el código (objeto PLAN) si querés ajustarlos.</div>
@@ -287,13 +289,18 @@ const PLAN = {
   MSTR:{name:'Strategy · xStock',ticker:'MSTR',color:'#ef4444',kind:'stock',mint:'XsP7xzNPvEHS1m6qfanPUGjNmdnmsLKEoNAnHjdxxyZ',budget:12000,weekly:100,weeks:30,
     tramos:[{id:'t110',price:110,amount:1000},{id:'t90',price:90,amount:1500},{id:'t70',price:70,amount:2000},{id:'t55',price:55,amount:2500}],
     reserva:[{id:'r30',price:30,amount:2000}]},
+  SPY:{name:'S&P 500 · xStock',ticker:'SPY',color:'#a855f7',kind:'stock',mint:'XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W',dynamic:true,ath:760,weeks:null,budget:null,
+    bands:[{dd:0.10,weekly:100},{dd:0.20,weekly:150},{dd:0.30,weekly:200},{dd:0.40,weekly:250},{dd:0.50,weekly:300},{dd:1.00,weekly:350}],
+    tramos:[{id:'d30',dd:0.30,amount:2500}],
+    reserva:[{id:'d40',dd:0.40,amount:5000},{id:'d50',dd:0.50,amount:10000}]},
 };
 const TICKERS = Object.keys(PLAN);
-const TOTAL_PLAN = TICKERS.reduce((s,t)=>s+PLAN[t].budget,0); // 224.000
+const TOTAL_PLAN = TICKERS.reduce((s,t)=>s+(PLAN[t].budget||0),0); // plan fijo ($170k); SPY es abierto
 
 // ============== STATE ==============
-let prices = {BTC:0,ETH:0,COIN:0,CRCL:0,MSTR:0};
-let priceSrc = {BTC:'live',ETH:'live',COIN:'manual',CRCL:'manual',MSTR:'manual'};
+let prices = {BTC:0,ETH:0,COIN:0,CRCL:0,MSTR:0,SPY:0};
+let priceSrc = {BTC:'live',ETH:'live',COIN:'manual',CRCL:'manual',MSTR:'manual',SPY:'manual'};
+let athRef = {SPY:760};   // ATH de referencia para activos con base dinámica (editable)
 let transactions = [];   // {id,date,ticker,kind,levelId,usd,price,qty?}
 let slippage = 0;        // % aplicado a compras rápidas (slippage + fees)
 let editingTx = null;    // id de la compra en edición
@@ -305,11 +312,17 @@ function loadState(){
     transactions=s.transactions||[];
     prices={...prices,...(s.prices||{})}; // recordar últimos precios (sobre todo stocks)
     slippage=s.slippage||0;
+    athRef={...athRef,...(s.athRef||{})};
   }catch(e){console.error(e)}
 }
-function saveState(){localStorage.setItem(KEY,JSON.stringify({transactions,prices,slippage}));}
+function saveState(){localStorage.setItem(KEY,JSON.stringify({transactions,prices,slippage,athRef}));}
 function setSlippage(v){const s=parseFloat(v); slippage=(isFinite(s)&&s>=0)?s:0; saveState(); render();}
 function fillPrice(t){return prices[t]*(1+slippage/100);}
+// --- base dinámica / niveles relativos al ATH (para SPY) ---
+function assetAth(t){ let a=(athRef[t]||PLAN[t].ath||0); if(prices[t]>a) a=prices[t]; return a; }
+function drawdown(t){ const p=prices[t], a=assetAth(t); if(!(p>0)||!(a>0)) return 0; return Math.max(0,(a-p)/a); }
+function levelPrice(t,lvl){ return lvl.price!=null ? lvl.price : assetAth(t)*(1-lvl.dd); }
+function baseWeekly(t){ const P=PLAN[t]; if(!P.dynamic) return P.weekly; const dd=drawdown(t); for(const b of P.bands){ if(dd<=b.dd) return b.weekly; } return P.bands[P.bands.length-1].weekly; }
 
 // ============== PRICES ==============
 async function refreshPrices(){
@@ -343,14 +356,18 @@ async function refreshPrices(){
         if(jp) px=parseFloat(jp);
       }catch(e){console.error('Jupiter '+t,e);}
     }
-    if(px>0){prices[t]=px;priceSrc[t]='dex';okStock++;}
+    if(px>0){prices[t]=px;priceSrc[t]='dex';okStock++; if(PLAN[t].dynamic && px>(athRef[t]||0)) athRef[t]=px;}
   }
-  const tag = okCrypto ? (okStock===2?'BTC/ETH (Binance) + COIN/CRCL (Solana) en vivo':'BTC/ETH en vivo · stocks: revisar') : 'sin conexión';
+  const stockCount=TICKERS.filter(t=>PLAN[t].kind==='stock').length;
+  const tag = okCrypto ? (okStock>=stockCount?'BTC/ETH (Binance) + acciones (Solana) en vivo':'BTC/ETH en vivo · acciones: revisar') : 'sin conexión';
   document.getElementById('lastUpdate').textContent=tag+' · '+new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   saveState(); render();
 }
 function setPrice(t,val){
   const v=parseFloat(val); if(isFinite(v)&&v>0){prices[t]=v; priceSrc[t]='manual'; saveState(); render();}
+}
+function setAth(t,val){
+  const v=parseFloat(val); if(isFinite(v)&&v>0){athRef[t]=v; saveState(); render();}
 }
 
 // ============== CALC ==============
@@ -370,8 +387,9 @@ function deployed(t){return transactions.filter(x=>x.ticker===t).reduce((s,x)=>s
 function levelStatus(t,lvl){
   if(levelDone(t,lvl.id)) return 'done';
   const p=prices[t]; if(!p) return 'pending';
-  if(p<=lvl.price) return 'reached';
-  if(p<=lvl.price*1.04) return 'near';
+  const lp=levelPrice(t,lvl);
+  if(p<=lp) return 'reached';
+  if(p<=lp*1.04) return 'near';
   return 'pending';
 }
 function activeAlerts(){
@@ -391,20 +409,22 @@ function logBuy(ticker,kind,usd,price,levelId){
   saveState(); render(); return true;
 }
 function registerWeekly(t){
-  const w=weeksDone(t);
-  if(w>=PLAN[t].weeks){ if(!confirm(`Ya registraste las ${PLAN[t].weeks} semanas de ${t}. ¿Registrar una más igual?`)) return; }
-  logBuy(t,'base',PLAN[t].weekly,fillPrice(t));
+  const P=PLAN[t];
+  if(P.weeks){ const w=weeksDone(t); if(w>=P.weeks){ if(!confirm(`Ya registraste las ${P.weeks} semanas de ${t}. ¿Registrar una más igual?`)) return; } }
+  logBuy(t,'base',baseWeekly(t),fillPrice(t));
 }
 function registerAllWeekly(){
   const missing=TICKERS.filter(t=>!prices[t]);
   if(missing.length){alert(`Faltan precios de: ${missing.join(', ')}. Cargalos arriba primero.`);return;}
-  if(!confirm(`Registrar la base semanal de los 5 activos al precio actual${slippage>0?` (+${slippage}% slippage)`:''}?\n\nBTC $${PLAN.BTC.weekly} · ETH $${PLAN.ETH.weekly} · COIN $${PLAN.COIN.weekly} · CRCL $${PLAN.CRCL.weekly} · MSTR $${PLAN.MSTR.weekly}\nTotal: $${TICKERS.reduce((s,t)=>s+PLAN[t].weekly,0)}`)) return;
-  TICKERS.forEach(t=>logBuy(t,'base',PLAN[t].weekly,fillPrice(t)));
+  const lines=TICKERS.map(t=>`${t} $${baseWeekly(t)}`).join(' · ');
+  const total=TICKERS.reduce((s,t)=>s+baseWeekly(t),0);
+  if(!confirm(`Registrar la base semanal de todos los activos al precio actual${slippage>0?` (+${slippage}% slippage)`:''}?\n\n${lines}\nTotal: $${total}`)) return;
+  TICKERS.forEach(t=>logBuy(t,'base',baseWeekly(t),fillPrice(t)));
 }
 function registerLevel(t,bucket,id){
   const key = bucket==='tramo' ? 'tramos' : 'reserva';
   const lvl=PLAN[t][key].find(l=>l.id===id); if(!lvl) return;
-  if(!confirm(`Registrar compra de ${t}: $${lvl.amount.toLocaleString()} al precio de fill $${fmt(fillPrice(t))}${slippage>0?` (incluye ${slippage}% slippage)`:''}? (nivel objetivo $${fmt(lvl.price)})`)) return;
+  if(!confirm(`Registrar compra de ${t}: $${lvl.amount.toLocaleString()} al precio de fill $${fmt(fillPrice(t))}${slippage>0?` (incluye ${slippage}% slippage)`:''}? (nivel objetivo $${fmt(levelPrice(t,lvl))})`)) return;
   logBuy(t,bucket,lvl.amount,fillPrice(t),id);
 }
 function addManual(){
@@ -447,21 +467,25 @@ function render(){
 function renderPrices(){
   document.getElementById('pricesBar').innerHTML=TICKERS.map(t=>{
     const P=PLAN[t], p=prices[t]||0;
-    // próximo tramo pendiente (precio <= y no comprado): el de mayor precio aún por encima o el más cercano por debajo
-    const pend=[...P.tramos,...P.reserva].filter(l=>!levelDone(t,l.id));
     let nextTxt='—';
-    if(p>0&&pend.length){
-      const below=pend.filter(l=>l.price<p).sort((a,b)=>b.price-a.price)[0];
-      const target=below||pend.sort((a,b)=>b.price-a.price)[0];
-      const dist=((target.price-p)/p*100);
-      nextTxt=`próx. tramo $${fmt(target.price)} (${dist>=0?'+':''}${dist.toFixed(1)}%)`;
+    if(P.dynamic){
+      if(p>0) nextTxt=`−${(drawdown(t)*100).toFixed(0)}% del ATH ($${fmt(assetAth(t))}) · base $${baseWeekly(t)}/sem`;
+    } else if(p>0){
+      const pend=[...P.tramos,...P.reserva].filter(l=>!levelDone(t,l.id)).map(l=>({...l,lp:levelPrice(t,l)}));
+      if(pend.length){
+        const below=pend.filter(l=>l.lp<p).sort((a,b)=>b.lp-a.lp)[0];
+        const target=below||pend.sort((a,b)=>b.lp-a.lp)[0];
+        const dist=((target.lp-p)/p*100);
+        nextTxt=`próx. tramo $${fmt(target.lp)} (${dist>=0?'+':''}${dist.toFixed(1)}%)`;
+      }
     }
-    const live=P.kind==='crypto';
     const srcLabel={live:'Binance',dex:'Solana DEX',manual:'manual'}[priceSrc[t]||'manual'];
     const isLiveSrc=(priceSrc[t]==='live'||priceSrc[t]==='dex');
+    const athEditor = P.dynamic ? `<div style="display:flex;align-items:center;gap:4px;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">ATH $<input type="number" step="any" value="${athRef[t]||''}" onchange="setAth('${t}',this.value)" style="width:62px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:2px 5px;font-family:var(--mono);font-size:10px"></div>` : '';
     return `<div class="price-card">
       <div class="pc-top"><span class="pc-ticker" style="color:${P.color}">${t}</span><span class="pc-kind">${srcLabel}</span></div>
       <input class="price-input ${isLiveSrc?'live':''}" type="number" step="any" value="${p||''}" placeholder="precio…" onchange="setPrice('${t}',this.value)">
+      ${athEditor}
       <div class="pc-next">${nextTxt}</div>
     </div>`;
   }).join('');
@@ -477,7 +501,7 @@ function renderAlerts(){
     return `<div class="alert-banner ${res?'reserva':''}">
       <div class="alert-icon">${res?'🚨':'🟢'}</div>
       <div class="alert-body">
-        <div class="alert-title">${t} tocó el nivel $${fmt(lvl.price)} ${res?'(RESERVA profunda)':''}</div>
+        <div class="alert-title">${t} tocó el nivel $${fmt(levelPrice(t,lvl))} ${res?'(RESERVA profunda)':''}</div>
         <div class="alert-desc">precio actual $${fmt(prices[t])} · te toca comprar $${lvl.amount.toLocaleString()} de ${t}</div>
       </div>
       <button class="${res?'danger':'green'}" onclick="registerLevel('${t}','${lvl.bucket}','${lvl.id}')">Registrar $${lvl.amount.toLocaleString()}</button>
@@ -486,28 +510,31 @@ function renderAlerts(){
 }
 
 function renderSummary(){
-  let inv=0,val=0;
-  TICKERS.forEach(t=>{const p=position(t); inv+=p.usd; val+=p.value;});
+  let inv=0,val=0,invFixed=0;
+  TICKERS.forEach(t=>{const p=position(t); inv+=p.usd; val+=p.value; if(PLAN[t].budget!=null) invFixed+=p.usd;});
   const pnl=val-inv;
   document.getElementById('sInvested').textContent=money(inv);
-  document.getElementById('sDeployedPct').textContent=(inv/TOTAL_PLAN*100).toFixed(1)+'% del plan';
+  document.getElementById('sDeployedPct').textContent=(invFixed/TOTAL_PLAN*100).toFixed(1)+'% del plan fijo';
   document.getElementById('sValue').textContent=money(val);
   const pe=document.getElementById('sPnl'); pe.textContent=(pnl>=0?'+':'')+money(pnl); pe.className='value '+pnlClass(pnl);
   document.getElementById('sPnlPct').textContent=(inv>0?(pnl>=0?'+':'')+(pnl/inv*100).toFixed(1)+'%':'—');
-  document.getElementById('sDry').textContent=money(TOTAL_PLAN-inv);
-  document.getElementById('sDryWeeks').textContent='de '+money(TOTAL_PLAN)+' total';
-  // precio promedio global no aplica (multi-activo) → mostramos % desplegado de cada uno no; dejamos el P/L %
+  document.getElementById('sDry').textContent=money(TOTAL_PLAN-invFixed);
+  document.getElementById('sDryWeeks').textContent='de '+money(TOTAL_PLAN)+' (S&P aparte)';
   document.getElementById('sAvg').textContent=inv>0?(val/inv).toFixed(3)+'×':'—';
   document.getElementById('sAvg').parentElement.querySelector('.label').textContent='Valor / Invertido';
 }
 
 function renderWeekly(){
   document.getElementById('weeklyGrid').innerHTML=TICKERS.map(t=>{
-    const P=PLAN[t], w=weeksDone(t), pct=Math.min(100,w/P.weeks*100);
+    const P=PLAN[t], w=weeksDone(t);
+    const amt=baseWeekly(t);
+    const dyn=P.dynamic;
+    const prog = dyn ? `−${(drawdown(t)*100).toFixed(0)}% ATH · sem ${w}` : `semana ${w} / ${P.weeks}`;
+    const pct = dyn ? Math.min(100, drawdown(t)/0.5*100) : Math.min(100,w/P.weeks*100);
     return `<div class="weekly-card">
-      <div class="wc-ticker" style="color:${P.color}">${t}</div>
-      <div class="wc-amt">$${P.weekly.toLocaleString()}</div>
-      <div class="wc-prog">semana ${w} / ${P.weeks}</div>
+      <div class="wc-ticker" style="color:${P.color}">${t}${dyn?' <span style="font-size:9px;color:var(--text-dim)">DIN</span>':''}</div>
+      <div class="wc-amt">$${amt.toLocaleString()}</div>
+      <div class="wc-prog">${prog}</div>
       <div class="bar"><div class="bar-fill" style="width:${pct}%;background:${P.color}"></div></div>
       <button class="mini primary" style="width:100%" onclick="registerWeekly('${t}')">+ Registrar ${t}</button>
     </div>`;
@@ -531,7 +558,9 @@ function renderPositions(){
 
 function renderAlloc(){
   document.getElementById('allocGrid').innerHTML=TICKERS.map(t=>{
-    const P=PLAN[t], dep=deployed(t), pos=position(t), pct=Math.min(100,dep/P.budget*100);
+    const P=PLAN[t], dep=deployed(t), pos=position(t);
+    const hasBudget=P.budget!=null;
+    const pct=hasBudget?Math.min(100,dep/P.budget*100):Math.min(100,drawdown(t)/0.5*100);
     const baseDep=transactions.filter(x=>x.ticker===t&&x.kind==='base').reduce((s,x)=>s+x.usd,0);
     const tramoDep=transactions.filter(x=>x.ticker===t&&x.kind==='tramo').reduce((s,x)=>s+x.usd,0);
     const resDep=transactions.filter(x=>x.ticker===t&&(x.kind==='reserva')).reduce((s,x)=>s+x.usd,0);
@@ -539,13 +568,13 @@ function renderAlloc(){
     return `<div class="alloc-card">
       <div class="alloc-head">
         <span class="ah-name"><span class="dot" style="background:${P.color}"></span>${t}</span>
-        <span class="ah-budget">${money(dep)} / ${money(P.budget)}</span>
+        <span class="ah-budget">${hasBudget?money(dep)+' / '+money(P.budget):money(dep)+' · abierto'}</span>
       </div>
       <div class="bar"><div class="bar-fill" style="width:${pct}%;background:${P.color}"></div></div>
       <div class="alloc-row"><span>Base / Tramos / Reserva</span><b>${money(baseDep)} · ${money(tramoDep)} · ${money(resDep)}</b></div>
       ${manDep>0?`<div class="alloc-row"><span>Manual</span><b>${money(manDep)}</b></div>`:''}
       <div class="alloc-row"><span>Holdings</span><b>${pos.qty>0?qtyFmt(t,pos.qty)+' '+t:'—'}</b></div>
-      <div class="alloc-row"><span>Restante del budget</span><b>${money(P.budget-dep)}</b></div>
+      <div class="alloc-row"><span>${hasBudget?'Restante del budget':'Tipo'}</span><b>${hasBudget?money(P.budget-dep):'base dinámica + dips'}</b></div>
     </div>`;
   }).join('');
 }
@@ -557,15 +586,16 @@ function renderLadders(){
       const st=levelStatus(t,lvl);
       const stTxt={pending:'pendiente',near:'cerca',reached:'tocado',done:'comprado'}[st];
       const p=prices[t]||0;
-      // barra: cuán cerca está el precio de tocar el nivel (100% = tocado)
+      const lp=levelPrice(t,lvl);
       let fillPct=0;
-      if(p>0) fillPct=Math.max(0,Math.min(100,(1-(p-lvl.price)/(lvl.price*0.5))*100));
+      if(p>0) fillPct=Math.max(0,Math.min(100,(1-(p-lp)/(lp*0.5))*100));
       if(st==='reached'||st==='done') fillPct=100;
       const col=st==='done'?'var(--blue)':(st==='reached'?'var(--green)':(st==='near'?'var(--yellow)':'var(--text-dim)'));
       const btn= st==='reached' ? `<button class="mini ${lvl.bucket==='reserva'?'danger':'green'}" onclick="registerLevel('${t}','${lvl.bucket}','${lvl.id}')">Registrar</button>`
                : st==='done' ? `<span style="color:var(--text-dim);font-size:11px">✓ hecho</span>` : '';
+      const lbl = lvl.dd!=null ? `$${fmt(lp)} <span style="font-size:9px">−${(lvl.dd*100).toFixed(0)}%</span>` : `$${fmt(lp)}`;
       return `<div class="level-row" style="${lvl.bucket==='reserva'?'opacity:.92':''}">
-        <div style="${lvl.bucket==='reserva'?'color:var(--emergency)':''}">$${fmt(lvl.price)} ${lvl.bucket==='reserva'?'<span style="font-size:9px">RES</span>':''}</div>
+        <div style="${lvl.bucket==='reserva'?'color:var(--emergency)':''}">${lbl} ${lvl.bucket==='reserva'?'<span style="font-size:9px">RES</span>':''}</div>
         <div class="level-bar"><div class="level-bar-fill" style="width:${fillPct}%;background:${col}"></div></div>
         <div>$${lvl.amount.toLocaleString()}</div>
         <div class="lvl-status st-${st}">${stTxt}</div>
@@ -573,8 +603,11 @@ function renderLadders(){
       </div>`;
     }).join('');
     const w=weeksDone(t);
+    const head = P.dynamic
+      ? `${P.name} · base dinámica $${baseWeekly(t)}/sem (−${(drawdown(t)*100).toFixed(0)}% ATH · sem ${w})`
+      : `${P.name} · base $${P.weekly}/sem (sem ${w}/${P.weeks})`;
     return `<div class="ladder">
-      <div class="ladder-head"><span class="dot" style="background:${P.color}"></span>${P.name} · base $${P.weekly}/sem (sem ${w}/${P.weeks})</div>
+      <div class="ladder-head"><span class="dot" style="background:${P.color}"></span>${head}</div>
       <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">${rows}</div>
     </div>`;
   }).join('');
