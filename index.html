@@ -261,7 +261,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
       <h3>Slippage y corrección de compras</h3>
       <p>El botón registra al precio mostrado, pero en la realidad tu fill es un poco peor (slippage + comisiones), así que recibís algo menos. Dos formas de ajustarlo: poné un <b>slippage %</b> arriba (ej. 0,3) y cada compra rápida se guarda a un precio un toque más alto, bajando la cantidad para que coincida sola. Y en el <b>Historial</b>, el botón ✎ te deja editar cualquier compra: monto, precio, o directamente la <b>cantidad real recibida</b> (dejá el campo cantidad vacío para que se calcule sola, o escribila para fijar exactamente lo que tenés). Las compras con cantidad ajustada a mano quedan marcadas con un puntito amarillo.</p>
       <h3>S&P 500 (SPY) · base dinámica</h3>
-      <p>El S&P es distinto: la base semanal <b>se ajusta sola según cuánto está el precio debajo de su máximo (ATH)</b> — $100 cerca de máximos, y va subiendo ($150, $200… hasta $350) cuanto más cae. No tiene límite de semanas (es un hold de largo plazo). Su ATH de referencia se actualiza solo si el índice hace nuevos máximos. Los niveles de dip (−30%, −40%, −50%) y sus refuerzos ($2.500 / $5.000 / $10.000) se calculan como % por debajo de ese ATH. El SPY queda fuera del "plan fijo" de $170k (es abierto), por eso en el resumen aparece aparte.</p>
+      <p>El S&P es distinto: la base semanal <b>se ajusta sola según cuánto está el precio debajo de su máximo (ATH)</b> — $100 cerca de máximos, y va subiendo ($150, $200… hasta $350) cuanto más cae. No tiene límite de semanas (es un hold de largo plazo). <b>El ATH se calcula solo</b>: el tracker lo trae de CoinGecko en cada actualización y además lo sube si el precio en vivo imprime un máximo nuevo, así que no tenés que tocarlo. El campito "ATH" de la tarjeta es solo un override por si alguna vez querés corregirlo a mano. Los niveles de dip (−30%, −40%, −50%) y sus refuerzos ($2.500 / $5.000 / $10.000) se calculan como % por debajo de ese ATH. El SPY queda fuera del "plan fijo" de $170k (es abierto), por eso en el resumen aparece aparte.</p>
       <h3>Tus datos</h3>
       <p>Todo se guarda en este navegador (localStorage). Usá "Backup" para bajar un JSON y "Importar" para restaurarlo. Abrí siempre el mismo archivo en el mismo navegador para no perder el historial.</p>
       <div class="note" style="margin-top:16px"><b>Nota:</b> esto es una herramienta de seguimiento, no asesoramiento financiero. Los niveles y montos son los que definimos juntos; podés editarlos en el código (objeto PLAN) si querés ajustarlos.</div>
@@ -357,6 +357,15 @@ async function refreshPrices(){
       }catch(e){console.error('Jupiter '+t,e);}
     }
     if(px>0){prices[t]=px;priceSrc[t]='dex';okStock++; if(PLAN[t].dynamic && px>(athRef[t]||0)) athRef[t]=px;}
+  }
+  // --- ATH real del token para activos dinámicos (CoinGecko por dirección de contrato) ---
+  for(const t of TICKERS.filter(t=>PLAN[t].dynamic)){
+    try{
+      const cr=await fetch(`https://api.coingecko.com/api/v3/coins/solana/contract/${PLAN[t].mint}`);
+      const cd=await cr.json();
+      const a=cd&&cd.market_data&&cd.market_data.ath&&cd.market_data.ath.usd;
+      if(a&&a>0&&a>(athRef[t]||0)) athRef[t]=a;
+    }catch(e){console.error('CoinGecko ATH '+t,e);}
   }
   const stockCount=TICKERS.filter(t=>PLAN[t].kind==='stock').length;
   const tag = okCrypto ? (okStock>=stockCount?'BTC/ETH (Binance) + acciones (Solana) en vivo':'BTC/ETH en vivo · acciones: revisar') : 'sin conexión';
