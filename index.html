@@ -20,7 +20,7 @@
 *::-webkit-scrollbar{width:8px;height:8px}
 *::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 body{background:var(--bg);color:var(--text);font-family:var(--display);min-height:100vh;padding:24px;font-size:15px}
-.container{max-width:1240px;margin:0 auto}
+.container{max-width:1340px;margin:0 auto}
 
 .header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border);gap:16px;flex-wrap:wrap}
 .header h1{font-size:30px;font-weight:700;letter-spacing:-1px;background:linear-gradient(135deg,var(--orange),var(--yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -50,7 +50,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
 .card-subtitle{color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;font-family:var(--mono)}
 
 /* LIVE PRICES BAR */
-.prices-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.prices-bar{display:grid;grid-template-columns:repeat(7,1fr);gap:14px;margin-bottom:24px}
 .price-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden}
 .price-card .pc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .price-card .pc-ticker{font-family:var(--mono);font-weight:700;font-size:15px}
@@ -71,6 +71,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
 .alert-banner{background:linear-gradient(135deg,rgba(86,211,100,.14),rgba(88,166,255,.14));border:1px solid var(--green);border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:14px;animation:glow 2.2s ease-in-out infinite}
 @keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(86,211,100,.25)}50%{box-shadow:0 0 26px 0 rgba(86,211,100,.18)}}
 .alert-banner.reserva{background:linear-gradient(135deg,rgba(255,56,96,.14),rgba(255,126,63,.14));border-color:var(--emergency)}
+.alert-banner.reminder{background:linear-gradient(135deg,rgba(88,166,255,.14),rgba(168,85,247,.12));border-color:var(--blue);animation:none}
 .alert-icon{font-size:28px}
 .alert-body{flex:1}
 .alert-title{font-weight:700;font-size:15px;color:var(--green)}
@@ -257,6 +258,8 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
       <p>En "Resumen y compras" tenés la base semanal de cada activo (BTC $1.000 · ETH $200 · COIN/CRCL/MSTR $100 c/u · SPY dinámico según el drawdown del ATH). Cada vez que comprás, tocás "Registrar la semana completa" (incluye todos, también el SPY) o el botón de cada activo. Se registra al precio actual. Los cinco cripto van 30 semanas; el SPY no tiene límite.</p>
       <h3>Alertas de tramos</h3>
       <p>Cuando el precio en vivo toca un nivel de la escalera, aparece un <b>cartel verde arriba</b> y el nivel queda en estado "TOCADO". Tocás "Registrar" y queda comprado. Los niveles a menos de 4% se marcan en amarillo ("cerca").</p>
+      <h3>Recordatorio de compra semanal</h3>
+      <p>Si llega el <b>viernes, sábado o domingo</b> y todavía no registraste la base semanal de algún activo, aparece un <b>cartel azul arriba</b> avisándote cuál falta, con botón para registrarla al toque. No importa qué día comprás: cuenta toda la semana (lunes a domingo), así que si comprás un miércoles, el viernes ya no te avisa. SPCX no entra (es solo escalera).</p>
       <h3>Precios</h3>
       <p><b>BTC y ETH</b> se actualizan desde Binance. <b>COIN y CRCL</b> ahora se leen en vivo del precio del token xStock en Solana (DexScreener, con Jupiter de respaldo), sin clave. Si la API no responde, el campo queda editable y podés escribir el precio a mano (lo copiás de Kraken). Ojo: el precio on-chain del token sigue al de la acción real, pero <b>COINx y MSTRx tienen poca liquidez</b>, así que su precio puede moverse a saltos o quedar algo desfasado del precio real (hoy mismo MSTRx cotiza con descuento vs MSTR) — si ves algo raro, cruzá con Kraken o con el precio de la acción.</p>
       <h3>Slippage y corrección de compras</h3>
@@ -397,6 +400,20 @@ function position(t){
 function weeksDone(t){return transactions.filter(x=>x.ticker===t&&x.kind==='base').length;}
 function levelDone(t,id){return transactions.some(x=>x.ticker===t&&x.levelId===id);}
 function deployed(t){return transactions.filter(x=>x.ticker===t).reduce((s,x)=>s+x.usd,0);}
+// --- recordatorio de compra semanal (lunes-domingo, sin importar el día que compres) ---
+function ymd(x){return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');}
+function weekStartStr(d){ d=d||new Date(); const x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); return ymd(x); } // lunes de esta semana
+function boughtBaseThisWeek(t){ const ws=weekStartStr(); return transactions.some(x=>x.ticker===t && x.kind==='base' && x.date>=ws); }
+function weeklyReminders(){
+  const dow=new Date().getDay(); // 0=dom,5=vie,6=sáb
+  if(!(dow===5||dow===6||dow===0)) return [];   // solo viernes, sábado, domingo
+  return TICKERS.filter(t=>{
+    const P=PLAN[t];
+    if(P.noBase) return false;                    // SPCX no tiene base semanal
+    if(P.weeks && weeksDone(t)>=P.weeks) return false; // base ya completada
+    return !boughtBaseThisWeek(t);
+  });
+}
 
 // status of a price level vs current price
 function levelStatus(t,lvl){
@@ -510,20 +527,35 @@ function renderPrices(){
 
 function renderAlerts(){
   const alerts=activeAlerts();
+  const reminders=weeklyReminders();
+  const total=alerts.length+reminders.length;
   const tabL=document.getElementById('tabLadders');
-  tabL.innerHTML='🪜 Escaleras'+(alerts.length?`<span class="tab-badge">${alerts.length}</span>`:'');
-  if(!alerts.length){document.getElementById('alertsArea').innerHTML='';return;}
-  document.getElementById('alertsArea').innerHTML=alerts.map(({t,lvl})=>{
+  tabL.innerHTML='🪜 Escaleras'+(total?`<span class="tab-badge">${total}</span>`:'');
+  if(!total){document.getElementById('alertsArea').innerHTML='';return;}
+  const parts=[];
+  reminders.forEach(t=>{
+    const amt=baseWeekly(t);
+    parts.push(`<div class="alert-banner reminder">
+      <div class="alert-icon">📅</div>
+      <div class="alert-body">
+        <div class="alert-title">Falta tu compra semanal de ${t}</div>
+        <div class="alert-desc">esta semana todavía no registraste la base de ${t}${amt?` · te toca $${amt.toLocaleString()}`:''}</div>
+      </div>
+      <button class="primary" onclick="registerWeekly('${t}')">Registrar ${t}${amt?` $${amt.toLocaleString()}`:''}</button>
+    </div>`);
+  });
+  alerts.forEach(({t,lvl})=>{
     const res=lvl.bucket==='reserva';
-    return `<div class="alert-banner ${res?'reserva':''}">
+    parts.push(`<div class="alert-banner ${res?'reserva':''}">
       <div class="alert-icon">${res?'🚨':'🟢'}</div>
       <div class="alert-body">
         <div class="alert-title">${t} tocó el nivel $${fmt(levelPrice(t,lvl))} ${res?'(RESERVA profunda)':''}</div>
         <div class="alert-desc">precio actual $${fmt(prices[t])} · te toca comprar $${lvl.amount.toLocaleString()} de ${t}</div>
       </div>
       <button class="${res?'danger':'green'}" onclick="registerLevel('${t}','${lvl.bucket}','${lvl.id}')">Registrar $${lvl.amount.toLocaleString()}</button>
-    </div>`;
-  }).join('');
+    </div>`);
+  });
+  document.getElementById('alertsArea').innerHTML=parts.join('');
 }
 
 function renderSummary(){
