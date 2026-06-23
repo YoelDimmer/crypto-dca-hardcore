@@ -153,7 +153,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
 
 <div class="header">
   <div>
-    <h1>Plan DCA · BTC · ETH · COIN · CRCL · MSTR · SPY</h1>
+    <h1>Plan DCA · BTC · ETH · COIN · CRCL · MSTR · SPY · SPCX</h1>
     <div class="subtitle">Base semanal + escalera de tramos + reserva — acumulación en bear market</div>
   </div>
   <div class="header-actions">
@@ -198,7 +198,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
     <div class="card-title"><span>🗓️ Compra semanal (base)</span>
       <button class="green" onclick="registerAllWeekly()">+ Registrar la semana completa</button>
     </div>
-    <div class="card-subtitle">se compra al precio actual de cada activo · 20 semanas</div>
+    <div class="card-subtitle">se compra al precio actual de cada activo · cripto: 30 semanas · S&P: base dinámica, sin límite</div>
     <div class="weekly-grid" id="weeklyGrid"></div>
   </div>
 
@@ -230,7 +230,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
   <div class="card">
     <div class="card-title">➕ Registrar compra manual</div>
     <div class="manual-form">
-      <div class="field"><label>Activo</label><select id="mAsset"><option>BTC</option><option>ETH</option><option>COIN</option><option>CRCL</option><option>MSTR</option><option>SPY</option></select></div>
+      <div class="field"><label>Activo</label><select id="mAsset"><option>BTC</option><option>ETH</option><option>COIN</option><option>CRCL</option><option>MSTR</option><option>SPY</option><option>SPCX</option></select></div>
       <div class="field"><label>Tipo</label><select id="mKind"><option value="base">Semanal</option><option value="tramo">Tramo</option><option value="reserva">Reserva</option><option value="manual">Manual</option></select></div>
       <div class="field"><label>Monto USD</label><input type="number" id="mUsd" placeholder="0" step="1"></div>
       <div class="field"><label>Precio</label><input type="number" id="mPrice" placeholder="precio" step="any"></div>
@@ -254,7 +254,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
     <div class="help">
       <p>Este tablero sigue el plan que armamos: una <b>base semanal</b> que comprás pase lo que pase, una <b>escalera de tramos</b> que se dispara cuando el precio baja a ciertos niveles, y una <b>reserva profunda</b> para caídas extremas.</p>
       <h3>Compra semanal</h3>
-      <p>En "Resumen y compras" tenés las 4 bases ($2.000 BTC · $400 ETH · $200 COIN · $200 CRCL = <b>$2.800/semana</b>). Cada vez que comprás, tocás "Registrar la semana completa" (o el botón de cada activo). Se registra al precio actual. Llevás la cuenta de semana X de 20.</p>
+      <p>En "Resumen y compras" tenés la base semanal de cada activo (BTC $1.000 · ETH $200 · COIN/CRCL/MSTR $100 c/u · SPY dinámico según el drawdown del ATH). Cada vez que comprás, tocás "Registrar la semana completa" (incluye todos, también el SPY) o el botón de cada activo. Se registra al precio actual. Los cinco cripto van 30 semanas; el SPY no tiene límite.</p>
       <h3>Alertas de tramos</h3>
       <p>Cuando el precio en vivo toca un nivel de la escalera, aparece un <b>cartel verde arriba</b> y el nivel queda en estado "TOCADO". Tocás "Registrar" y queda comprado. Los niveles a menos de 4% se marcan en amarillo ("cerca").</p>
       <h3>Precios</h3>
@@ -263,6 +263,8 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
       <p>El botón registra al precio mostrado, pero en la realidad tu fill es un poco peor (slippage + comisiones), así que recibís algo menos. Dos formas de ajustarlo: poné un <b>slippage %</b> arriba (ej. 0,3) y cada compra rápida se guarda a un precio un toque más alto, bajando la cantidad para que coincida sola. Y en el <b>Historial</b>, el botón ✎ te deja editar cualquier compra: monto, precio, o directamente la <b>cantidad real recibida</b> (dejá el campo cantidad vacío para que se calcule sola, o escribila para fijar exactamente lo que tenés). Las compras con cantidad ajustada a mano quedan marcadas con un puntito amarillo.</p>
       <h3>S&P 500 (SPY) · base dinámica</h3>
       <p>El S&P es distinto: la base semanal <b>se ajusta sola según cuánto está el precio debajo de su máximo (ATH)</b> — $100 cerca de máximos, y va subiendo ($150, $200… hasta $350) cuanto más cae. No tiene límite de semanas (es un hold de largo plazo). <b>El ATH se calcula solo</b>: el tracker lo trae de CoinGecko en cada actualización y además lo sube si el precio en vivo imprime un máximo nuevo, así que no tenés que tocarlo. El campito "ATH" de la tarjeta es solo un override por si alguna vez querés corregirlo a mano. Los niveles de dip (−30%, −40%, −50%) y sus refuerzos ($2.500 / $5.000 / $10.000) se calculan como % por debajo de ese ATH. El SPY queda fuera del "plan fijo" de $170k (es abierto), por eso en el resumen aparece aparte.</p>
+      <h3>SpaceX (SPCX) · solo escalera</h3>
+      <p>SpaceX es un satélite especulativo de $24k (capital nuevo, aparte del plan fijo y del SPY). Por ahora va <b>solo con escalera</b> anclada al precio de IPO ($135), sin base semanal — para no promediar contra la pared de oferta del lockup de insiders (vence sep-dic 2026). Niveles: tramos en $130/$115/$95/$75/$55 y reserva de emergencia en $40. Más adelante, si después del lockup sigue bajo, le sumamos base semanal. El precio se actualiza solo desde Solana (SPCXx). Ojo: token recién listado, liquidez fina y 24/7 — puede separarse del precio real del Nasdaq, cruzá siempre antes de ejecutar.</p>
       <h3>Tus datos</h3>
       <p>Todo se guarda en este navegador (localStorage). Usá "Backup" para bajar un JSON y "Importar" para restaurarlo. Abrí siempre el mismo archivo en el mismo navegador para no perder el historial.</p>
       <div class="note" style="margin-top:16px"><b>Nota:</b> esto es una herramienta de seguimiento, no asesoramiento financiero. Los niveles y montos son los que definimos juntos; podés editarlos en el código (objeto PLAN) si querés ajustarlos.</div>
@@ -294,13 +296,16 @@ const PLAN = {
     bands:[{dd:0.10,weekly:100},{dd:0.20,weekly:150},{dd:0.30,weekly:200},{dd:0.40,weekly:250},{dd:0.50,weekly:300},{dd:1.00,weekly:350}],
     tramos:[{id:'d30',dd:0.30,amount:2500}],
     reserva:[{id:'d40',dd:0.40,amount:5000},{id:'d50',dd:0.50,amount:10000}]},
+  SPCX:{name:'SpaceX · xStock',ticker:'SPCX',color:'#ec4899',kind:'stock',mint:'Xs3oZwbHvqis4NYcf4YKWmEia2eC84wSiVrcYcTqpH8',budget:24000,offPlan:true,noBase:true,weekly:0,weeks:0,
+    tramos:[{id:'s130',price:130,amount:2000},{id:'s115',price:115,amount:3000},{id:'s95',price:95,amount:4000},{id:'s75',price:75,amount:5000},{id:'s55',price:55,amount:6000}],
+    reserva:[{id:'s40',price:40,amount:4000}]},
 };
 const TICKERS = Object.keys(PLAN);
-const TOTAL_PLAN = TICKERS.reduce((s,t)=>s+(PLAN[t].budget||0),0); // plan fijo ($170k); SPY es abierto
+const TOTAL_PLAN = TICKERS.reduce((s,t)=>s+((PLAN[t].budget!=null && !PLAN[t].offPlan)?PLAN[t].budget:0),0); // plan fijo ($170k); SPY y SPCX son aparte
 
 // ============== STATE ==============
-let prices = {BTC:0,ETH:0,COIN:0,CRCL:0,MSTR:0,SPY:0};
-let priceSrc = {BTC:'live',ETH:'live',COIN:'manual',CRCL:'manual',MSTR:'manual',SPY:'manual'};
+let prices = {BTC:0,ETH:0,COIN:0,CRCL:0,MSTR:0,SPY:0,SPCX:0};
+let priceSrc = {BTC:'live',ETH:'live',COIN:'manual',CRCL:'manual',MSTR:'manual',SPY:'manual',SPCX:'manual'};
 let athRef = {SPY:760};   // ATH de referencia para activos con base dinámica (editable)
 let transactions = [];   // {id,date,ticker,kind,levelId,usd,price,qty?}
 let slippage = 0;        // % aplicado a compras rápidas (slippage + fees)
@@ -424,12 +429,13 @@ function registerWeekly(t){
   logBuy(t,'base',baseWeekly(t),fillPrice(t));
 }
 function registerAllWeekly(){
-  const missing=TICKERS.filter(t=>!prices[t]);
+  const base=TICKERS.filter(t=>!PLAN[t].noBase);
+  const missing=base.filter(t=>!prices[t]);
   if(missing.length){alert(`Faltan precios de: ${missing.join(', ')}. Cargalos arriba primero.`);return;}
-  const lines=TICKERS.map(t=>`${t} $${baseWeekly(t)}`).join(' · ');
-  const total=TICKERS.reduce((s,t)=>s+baseWeekly(t),0);
+  const lines=base.map(t=>`${t} $${baseWeekly(t)}`).join(' · ');
+  const total=base.reduce((s,t)=>s+baseWeekly(t),0);
   if(!confirm(`Registrar la base semanal de todos los activos al precio actual${slippage>0?` (+${slippage}% slippage)`:''}?\n\n${lines}\nTotal: $${total}`)) return;
-  TICKERS.forEach(t=>logBuy(t,'base',baseWeekly(t),fillPrice(t)));
+  base.forEach(t=>logBuy(t,'base',baseWeekly(t),fillPrice(t)));
 }
 function registerLevel(t,bucket,id){
   const key = bucket==='tramo' ? 'tramos' : 'reserva';
@@ -522,7 +528,7 @@ function renderAlerts(){
 
 function renderSummary(){
   let inv=0,val=0,invFixed=0;
-  TICKERS.forEach(t=>{const p=position(t); inv+=p.usd; val+=p.value; if(PLAN[t].budget!=null) invFixed+=p.usd;});
+  TICKERS.forEach(t=>{const p=position(t); inv+=p.usd; val+=p.value; if(PLAN[t].budget!=null && !PLAN[t].offPlan) invFixed+=p.usd;});
   const pnl=val-inv;
   document.getElementById('sInvested').textContent=money(inv);
   document.getElementById('sDeployedPct').textContent=(invFixed/TOTAL_PLAN*100).toFixed(1)+'% del plan fijo';
@@ -530,13 +536,13 @@ function renderSummary(){
   const pe=document.getElementById('sPnl'); pe.textContent=(pnl>=0?'+':'')+money(pnl); pe.className='value '+pnlClass(pnl);
   document.getElementById('sPnlPct').textContent=(inv>0?(pnl>=0?'+':'')+(pnl/inv*100).toFixed(1)+'%':'—');
   document.getElementById('sDry').textContent=money(TOTAL_PLAN-invFixed);
-  document.getElementById('sDryWeeks').textContent='de '+money(TOTAL_PLAN)+' (S&P aparte)';
+  document.getElementById('sDryWeeks').textContent='de '+money(TOTAL_PLAN)+' (S&P y SpaceX aparte)';
   document.getElementById('sAvg').textContent=inv>0?(val/inv).toFixed(3)+'×':'—';
   document.getElementById('sAvg').parentElement.querySelector('.label').textContent='Valor / Invertido';
 }
 
 function renderWeekly(){
-  document.getElementById('weeklyGrid').innerHTML=TICKERS.map(t=>{
+  document.getElementById('weeklyGrid').innerHTML=TICKERS.filter(t=>!PLAN[t].noBase).map(t=>{
     const P=PLAN[t], w=weeksDone(t);
     const amt=baseWeekly(t);
     const dyn=P.dynamic;
@@ -614,7 +620,9 @@ function renderLadders(){
       </div>`;
     }).join('');
     const w=weeksDone(t);
-    const head = P.dynamic
+    const head = P.noBase
+      ? `${P.name} · solo escalera (sin base semanal por ahora)`
+      : P.dynamic
       ? `${P.name} · base dinámica $${baseWeekly(t)}/sem (−${(drawdown(t)*100).toFixed(0)}% ATH · sem ${w})`
       : `${P.name} · base $${P.weekly}/sem (sem ${w}/${P.weeks})`;
     return `<div class="ladder">
