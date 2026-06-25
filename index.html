@@ -349,10 +349,14 @@ async function refreshPrices(){
   // --- Acciones: precio del token xStock en Solana (DexScreener, Jupiter de respaldo) ---
   for(const t of TICKERS.filter(t=>PLAN[t].kind==='stock')){
     const mint=PLAN[t].mint; let px=0;
-    try{ // DexScreener: tomamos el par con más liquidez
+    const prev=prices[t]||0;
+    // techo de cordura: ningún precio real está 5x por encima del nivel más alto de la escalera → descarta pools basura
+    const lv=[...(PLAN[t].tramos||[]),...(PLAN[t].reserva||[])].map(l=>levelPrice(t,l)).filter(x=>x>0);
+    const cap=lv.length?Math.max(...lv)*5:Infinity;
+    try{ // DexScreener: par con más liquidez, ignorando precios fuera del techo
       const r=await fetch(`https://api.dexscreener.com/latest/dex/tokens/${mint}`);
       const d=await r.json();
-      const pairs=(d.pairs||[]).filter(p=>p.baseToken&&p.baseToken.address===mint&&p.priceUsd);
+      const pairs=(d.pairs||[]).filter(p=>p.baseToken&&p.baseToken.address===mint&&p.priceUsd&&parseFloat(p.priceUsd)>0&&parseFloat(p.priceUsd)<=cap);
       pairs.sort((a,b)=>((b.liquidity&&b.liquidity.usd)||0)-((a.liquidity&&a.liquidity.usd)||0));
       if(pairs.length) px=parseFloat(pairs[0].priceUsd);
     }catch(e){console.error('DexScreener '+t,e);}
@@ -362,10 +366,11 @@ async function refreshPrices(){
         const jd=await jr.json();
         const e2=jd[mint]||(jd.data&&jd.data[mint]);
         const jp=e2&&(e2.usdPrice||e2.price);
-        if(jp) px=parseFloat(jp);
+        if(jp&&parseFloat(jp)>0&&parseFloat(jp)<=cap) px=parseFloat(jp);
       }catch(e){console.error('Jupiter '+t,e);}
     }
     if(px>0){prices[t]=px;priceSrc[t]='dex';okStock++; if(PLAN[t].dynamic && px>(athRef[t]||0)) athRef[t]=px;}
+    else if(prev>0){ priceSrc[t]='stale'; } // todos los feeds dieron precios raros: mantenemos el último bueno
   }
   // --- ATH real del token para activos dinámicos (CoinGecko por dirección de contrato) ---
   for(const t of TICKERS.filter(t=>PLAN[t].dynamic)){
@@ -513,7 +518,7 @@ function renderPrices(){
         nextTxt=`próx. tramo $${fmt(target.lp)} (${dist>=0?'+':''}${dist.toFixed(1)}%)`;
       }
     }
-    const srcLabel={live:'Binance',dex:'Solana DEX',manual:'manual'}[priceSrc[t]||'manual'];
+    const srcLabel={live:'Binance',dex:'Solana DEX',manual:'manual',stale:'sin actualizar ⚠'}[priceSrc[t]||'manual'];
     const isLiveSrc=(priceSrc[t]==='live'||priceSrc[t]==='dex');
     const athEditor = P.dynamic ? `<div style="display:flex;align-items:center;gap:4px;margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--text-dim)">ATH $<input type="number" step="any" value="${athRef[t]||''}" onchange="setAth('${t}',this.value)" style="width:62px;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:2px 5px;font-family:var(--mono);font-size:10px"></div>` : '';
     return `<div class="price-card">
