@@ -267,7 +267,7 @@ button.mini{padding:5px 10px;font-size:11px;font-family:var(--mono)}
       <h3>S&P 500 (SPY) · base dinámica</h3>
       <p>El S&P es distinto: la base semanal <b>se ajusta sola según cuánto está el precio debajo de su máximo (ATH)</b> — $100 cerca de máximos, y va subiendo ($150, $200… hasta $350) cuanto más cae. No tiene límite de semanas (es un hold de largo plazo). <b>El ATH se calcula solo</b>: el tracker lo trae de CoinGecko en cada actualización y además lo sube si el precio en vivo imprime un máximo nuevo, así que no tenés que tocarlo. El campito "ATH" de la tarjeta es solo un override por si alguna vez querés corregirlo a mano. Los niveles de dip (−30%, −40%, −50%) y sus refuerzos ($2.500 / $5.000 / $10.000) se calculan como % por debajo de ese ATH. El SPY queda fuera del "plan fijo" de $170k (es abierto), por eso en el resumen aparece aparte.</p>
       <h3>SpaceX (SPCX) · solo escalera</h3>
-      <p>SpaceX es un satélite especulativo de $24k (capital nuevo, aparte del plan fijo y del SPY). Por ahora va <b>solo con escalera</b> anclada al precio de IPO ($135), sin base semanal — para no promediar contra la pared de oferta del lockup de insiders (vence sep-dic 2026). Niveles: tramos en $130/$115/$95/$75/$55 y reserva de emergencia en $40. Más adelante, si después del lockup sigue bajo, le sumamos base semanal. El precio se actualiza solo desde Solana (SPCXx). Ojo: token recién listado, liquidez fina y 24/7 — puede separarse del precio real del Nasdaq, cruzá siempre antes de ejecutar.</p>
+      <p>SpaceX es un satélite especulativo de $24k (capital nuevo, aparte del plan fijo y del SPY). Por ahora va <b>solo con escalera</b> anclada al precio de IPO ($135), sin base semanal — para no promediar contra la pared de oferta del lockup de insiders (vence sep-dic 2026). Niveles: tramos en $120 ($1.500) / $105 ($2.500) / $90 ($3.500) / $75 ($5.000) / $60 ($7.500) y reserva de emergencia en $40 ($4.000), cargados hacia abajo. Más adelante, si después del lockup sigue bajo, le sumamos base semanal. El precio se actualiza solo desde Solana (SPCXx). Ojo: token recién listado, liquidez fina y 24/7 — puede separarse del precio real del Nasdaq, cruzá siempre antes de ejecutar.</p>
       <h3>Tus datos</h3>
       <p>Todo se guarda en este navegador (localStorage). Usá "Backup" para bajar un JSON y "Importar" para restaurarlo. Abrí siempre el mismo archivo en el mismo navegador para no perder el historial.</p>
       <div class="note" style="margin-top:16px"><b>Nota:</b> esto es una herramienta de seguimiento, no asesoramiento financiero. Los niveles y montos son los que definimos juntos; podés editarlos en el código (objeto PLAN) si querés ajustarlos.</div>
@@ -300,7 +300,7 @@ const PLAN = {
     tramos:[{id:'d30',dd:0.30,amount:2500}],
     reserva:[{id:'d40',dd:0.40,amount:5000},{id:'d50',dd:0.50,amount:10000}]},
   SPCX:{name:'SpaceX · xStock',ticker:'SPCX',color:'#ec4899',kind:'stock',mint:'Xs3oZwbHvqis4NYcf4YKWmEia2eC84wSiVrcYcTqpH8',budget:24000,offPlan:true,noBase:true,weekly:0,weeks:0,
-    tramos:[{id:'s130',price:130,amount:2000},{id:'s115',price:115,amount:3000},{id:'s95',price:95,amount:4000},{id:'s75',price:75,amount:5000},{id:'s55',price:55,amount:6000}],
+    tramos:[{id:'s120',price:120,amount:1500},{id:'s105',price:105,amount:2500},{id:'s90',price:90,amount:3500},{id:'s75',price:75,amount:5000},{id:'s60',price:60,amount:7500}],
     reserva:[{id:'s40',price:40,amount:4000}]},
 };
 const TICKERS = Object.keys(PLAN);
